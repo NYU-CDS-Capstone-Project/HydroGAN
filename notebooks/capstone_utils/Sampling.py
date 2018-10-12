@@ -1,9 +1,14 @@
+import numpy as np
+import sys,os,h5py
+from random import randint
+random.seed(a=0)
+
 def define_test(s_test, s_train):
     #2048/16=128
     m=8
-    x=randint(0,m)*s_train
-    y=randint(0,m)*s_train
-    z=randint(0,m)*s_train
+    x=random.randint(0,m)*s_train
+    y=random.randint(0,m)*s_train
+    z=random.randint(0,m)*s_train
     #print(x,y,z)
     return {'x':[x,x+s_test], 'y':[y,y+s_test], 'z':[z,z+s_test]}
 
@@ -25,9 +30,9 @@ def get_samples(s_sample, nsamples, redshift, test_coords):
     for n in range(nsamples):
         sample_valid=False
         while sample_valid==False:
-            x = randint(0,m)
-            y = randint(0,m)
-            z = randint(0,m)
+            x = random.randint(0,m)
+            y = random.randint(0,m)
+            z = random.randint(0,m)
             sample_coords = {'x':[x,x+s_sample], 
                              'y':[y,y+s_sample], 
                              'z':[z,z+s_sample]}
