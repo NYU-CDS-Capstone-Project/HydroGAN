@@ -1,6 +1,7 @@
 import numpy as np
 import sys,os,h5py
 from random import randint
+import random
 random.seed(a=0)
 
 def define_test(s_test, s_train):
