@@ -16,9 +16,17 @@
     * Try Label smoothing? -> https://github.com/soumith/ganhacks
     * Add script to check norms of gradients - if they are over 100 things are screwing up - https://github.com/soumith/ganhacks 
     * while lossD > A: train D, while lossG > B: train G - https://github.com/soumith/ganhacks 
+    * MMD-GAN
 * Hybrid Models
     * https://github.com/soumith/ganhacks -> if you cant use DCGANs and no model is stable, use a hybrid model : KL + GAN or VAE + GAN
     * How to use VAE + GAN?
+* Validation
+    * 1 PDF
+    * Log Histograms (compare the real distribution vs. the generated ones)
+        * VAE: the output of the decoder
+        * GAN: The output of Generator(noise)
+    * Power spectrum
+    * 3D Plot comparisons
 
 
 
