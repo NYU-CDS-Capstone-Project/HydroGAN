@@ -5,6 +5,12 @@
     * ~~Change the subcube sampling procedure to let non-128 multiple cubes to be selected as well~~
         * ~~Current way = (2048/128 - 2)^3 = 2744 different subcubes only~~
         * ~~New way = (2048 - 128*2)^3 = 5.7 billion different subcube combinations~~
+    * Change the subcube sampling procedure
+        * Currently, the subsampling subsamples all the training samples and stores them.
+            * in the self.samples under HydrogenDataset2
+        * Change this to quickly sample when the get_samples() function is called.
+            * incorporate get_samples into "\_\_getitem\_\_"
+            * get_samples should open f itself without reading the whole 2048 cube wholly, sample using the coordinates and f.close()
     * Calculate the total number of different subcubes we can sample from
 * VAE
     * Investigate why VAE is not producing any hydrogen masses? (Probably an issue with the decoder part of the VAE)
@@ -17,6 +23,10 @@
     * Add script to check norms of gradients - if they are over 100 things are screwing up - https://github.com/soumith/ganhacks 
     * while lossD > A: train D, while lossG > B: train G - https://github.com/soumith/ganhacks 
     * MMD-GAN
+        * Does a high number of 0's hinder the training procedure?
+        * log(a + 1) doesnt transform the distribution to normal!
+            * how to overcome this?
+            * Can MMD replicate this non-normal distribution?
 * Hybrid Models
     * https://github.com/soumith/ganhacks -> if you cant use DCGANs and no model is stable, use a hybrid model : KL + GAN or VAE + GAN
     * How to use VAE + GAN?
