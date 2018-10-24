@@ -28,6 +28,7 @@
             * how to overcome this?
             * Can MMD replicate this non-normal distribution?
         * Add f_dec_X_D & f_dec_Y_D to see whether the AE is working correctly
+            * Or maybe try to train with L1 loss vs. L2 (default)
         * Add 3D plots!
 * Hybrid Models
     * https://github.com/soumith/ganhacks -> if you cant use DCGANs and no model is stable, use a hybrid model : KL + GAN or VAE + GAN
