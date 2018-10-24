@@ -24,6 +24,7 @@
     * while lossD > A: train D, while lossG > B: train G - https://github.com/soumith/ganhacks 
     * MMD-GAN
         * Does a high number of 0's hinder the training procedure?
+        * try  square root instead of log for transformation
         * log(a + 1) doesnt transform the distribution to normal!
             * how to overcome this?
             * Can MMD replicate this non-normal distribution?
