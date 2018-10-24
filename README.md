@@ -27,6 +27,8 @@
         * log(a + 1) doesnt transform the distribution to normal!
             * how to overcome this?
             * Can MMD replicate this non-normal distribution?
+        * Add f_dec_X_D & f_dec_Y_D to see whether the AE is working correctly
+        * Add 3D plots!
 * Hybrid Models
     * https://github.com/soumith/ganhacks -> if you cant use DCGANs and no model is stable, use a hybrid model : KL + GAN or VAE + GAN
     * How to use VAE + GAN?
