@@ -12,6 +12,7 @@
             * incorporate get_samples into "\_\_getitem\_\_"
             * get_samples should open f itself without reading the whole 2048 cube wholly, sample using the coordinates and f.close()
     * Calculate the total number of different subcubes we can sample from
+* Cube transformations/Scaling
 * VAE
     * Investigate why VAE is not producing any hydrogen masses? (Probably an issue with the decoder part of the VAE)
     * In the decode() of the VAE class, create multiple checkpoints: sum all the values in the **out** variable and plot the evolution of the sum. Compare with the sum of the input subcubes.
@@ -41,6 +42,7 @@
         * GAN: The output of Generator(noise)
     * Power spectrum
     * 3D Plot comparisons
+
 
 
 
