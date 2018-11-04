@@ -1,3 +1,7 @@
 
 *.h5
+<<<<<<< HEAD
 .DS_Store
+=======
+*.html
+>>>>>>> 251dead02042717270a6bfc04b3e3fa429da0a40
