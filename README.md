@@ -14,8 +14,24 @@
     * Calculate the total number of different subcubes we can sample from
 * Cube transformations/Scaling
 * VAE
-    * Investigate why VAE is not producing any hydrogen masses? (Probably an issue with the decoder part of the VAE)
-    * In the decode() of the VAE class, create multiple checkpoints: sum all the values in the **out** variable and plot the evolution of the sum. Compare with the sum of the input subcubes.
+    * Investigate why VAE is not producing any hydrogen masses? (Probably an issue with the decoder part of the VAE). In the decode() of the VAE class, create multiple checkpoints: sum all the values in the **out** variable and plot the evolution of the sum. Compare with the sum of the input subcubes.
+      * First Convolution Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_conv_out.png)
+      * First ReLU Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_relu_oout.png)
+      * First MaxUnpool Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_maxunpool_out.png)
+      * Second Convolution Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_conv_out.png)
+      * Second ReLU Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_relu_out.png)
+      * Second MaxUnpool Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_maxunpool_out.png)
+      * Third Convolution Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/third_conv_out.png)
+      * Third ReLU Output
+      ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/third_relu_out.png)
+      
 * GAN
     * ~~Plotting the evolution of the Generator(noise) subcubes during training~~
     * Check whether the inputs are in the range of (-1,1) -> https://github.com/soumith/ganhacks
