@@ -37,21 +37,21 @@
       
       * No Transformation Output
          * First Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_conv_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/first_conv_out.png)
          * First ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_relu_oout.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/first_relu_oout.png)
          * First MaxUnpool Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/first_maxunpool_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/first_maxunpool_out.png)
          * Second Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_conv_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/second_conv_out.png)
          * Second ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_relu_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/second_relu_out.png)
          * Second MaxUnpool Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/second_maxunpool_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/second_maxunpool_out.png)
          * Third Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/third_conv_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/third_conv_out.png)
          * Third ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/third_relu_out.png)
+         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/third_relu_out.png)
       
 * GAN
     * ~~Plotting the evolution of the Generator(noise) subcubes during training~~
