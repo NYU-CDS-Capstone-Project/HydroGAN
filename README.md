@@ -35,6 +35,26 @@
          * Third ReLU Output
          ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/third_relu_out.png)
       
+      * 0-1 Scaled Data + Gaussian Noise Input
+         * Loss History
+         ![alt text]()
+         * First Convolution Output
+         ![alt text]()
+         * First ReLU Output
+         ![alt text]()
+         * First MaxUnpool Output
+         ![alt text]()
+         * Second Convolution Output
+         ![alt text]()
+         * Second ReLU Output
+         ![alt text]()
+         * Second MaxUnpool Output
+         ![alt text]()
+         * Third Convolution Output
+         ![alt text]()
+         * Third ReLU Output
+         ![alt text]()
+         
       * No Transformation Output
          * First Convolution Output
          ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/first_conv_out.png)
