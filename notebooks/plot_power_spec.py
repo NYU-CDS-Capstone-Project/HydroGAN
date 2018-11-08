@@ -63,6 +63,11 @@ def plot_power_spec(real_cube, generated_cube,
     plt.figure(figsize=(10,5))
     plt.plot(np.log(Pk_real_cube.k3D), np.log(Pk_real_cube.Pk[:,0]), color="b", label="original cube")
     plt.plot(np.log(Pk_gen_cube.k3D), np.log(Pk_gen_cube.Pk[:,0]), color="r", label="jaas")
+    plt.rcParams["font.size"] = 12
+    plt.title("Power Spectrum Comparison")
+    plt.xlabel('log(Pk.k3D)')
+    plt.ylabel('log(Pk.k3D)')
+    plt.legend()
     
     plt.show()
     return "Power spectrum plot complete!"
