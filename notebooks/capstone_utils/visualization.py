@@ -8,7 +8,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import colors
 import h5py
 import matplotlib as mpl
-
+import torch, torchvision
+import h5py
+import pyfftw
+import Pk_library as PKL
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     """Function for dividing/truncating cmaps"""
