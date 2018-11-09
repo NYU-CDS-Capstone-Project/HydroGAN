@@ -13,6 +13,41 @@ import h5py
 import pyfftw
 import Pk_library as PKL
 
+## model imports
+from __future__ import print_function
+import argparse
+import numpy as np
+import os
+import h5py
+import pickle as pkl
+import random
+# from mpi4py import MPI
+import torch
+import torch.utils.data
+from torch import nn, optim
+from torch.nn import functional as F
+from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+%matplotlib inline
+
+## normal noise input
+from torch.distributions import normal
+
+## plot imports
+import itertools
+from matplotlib.ticker import MultipleLocator
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import colors
+import h5py
+import matplotlib as mpl
+
+
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     """Function for dividing/truncating cmaps"""
     new_cmap = colors.LinearSegmentedColormap.from_list(
@@ -178,7 +213,7 @@ def visualize_cube(cube=None,      ## array name
     
     
     plt.show()
-    
+
 def plot_power_spec(real_cube, generated_cube,
                    threads=1, MAS="CIC", axis=0, BoxSize=75.0/2048*128):
     """Takes as input;
