@@ -15,46 +15,7 @@
 * Cube transformations/Scaling
 * VAE
     * Investigate why VAE is not producing any hydrogen masses? (Probably an issue with the decoder part of the VAE). In the decode() of the VAE class, create multiple checkpoints: sum all the values in the **out** variable and plot the evolution of the sum. Compare with the sum of the input subcubes.
-      * 0-1 Scaled Data Output
-         * Loss History
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/loss_hist.png)
-         * First Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/first_conv_out.png)
-         * First ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/first_relu_out.png)
-         * First MaxUnpool Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/first_max_unpool_out.png)
-         * Second Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/second_conv_out.png)
-         * Second ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/second_relu_out.png)
-         * Second MaxUnpool Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/second_max_unpool_out.png)
-         * Third Convolution Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/third_conv_out.png)
-         * Third ReLU Output
-         ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_ihs/third_relu_out.png)
-      
-      * 0-1 Scaled Data + Gaussian Noise Input
-         * Loss History
-         ![alt text]()
-         * First Convolution Output
-         ![alt text]()
-         * First ReLU Output
-         ![alt text]()
-         * First MaxUnpool Output
-         ![alt text]()
-         * Second Convolution Output
-         ![alt text]()
-         * Second ReLU Output
-         ![alt text]()
-         * Second MaxUnpool Output
-         ![alt text]()
-         * Third Convolution Output
-         ![alt text]()
-         * Third ReLU Output
-         ![alt text]()
-         
+    
       * No Transformation Output
          * First Convolution Output
          ![alt text](https://github.com/NYU-CDS-Capstone-Project/HydroGAN/blob/master/figs/vae_no_transform/first_conv_out.png)
