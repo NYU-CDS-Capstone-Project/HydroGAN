@@ -118,10 +118,18 @@ def visualize_cube(cube=None,      ## array name
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
 
-    if lognormal == False:
-        s = norm_multiply*data_1dim/np.linalg.norm(data_1dim)
-    else:
-        s = np.log(norm_multiply*data_1dim/np.linalg.norm(data_1dim))
+    s = norm_multiply * data_1dim
+
+    """
+    The nn.linalg.norm should not be used due to the fact 
+    that each subcube has different norms. Use the maximum of
+    the whole cube and mitigate with norm_multiply if 
+    no points are seen in the 3D plot.
+    """
+    # if lognormal == False:
+    #     s = norm_multiply*data_1dim/np.linalg.norm(data_1dim)
+    # else:
+    #     s = np.log(norm_multiply*data_1dim/np.linalg.norm(data_1dim))
     
     cmap=plt.get_cmap(color_map)
     new_cmap = truncate_colormap(cmap, 0.99, 1,n=10)
