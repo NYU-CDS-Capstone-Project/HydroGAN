@@ -226,7 +226,7 @@ def visualize_cube(cube=None,      # array name
         pass
 
 
-def 2_hist_plot(recon, real, epoch, file_name_ hd ):
+def mmd_hist_plot(recon, real, epoch, file_name, hd ):
     """
     Args:
         recon(): generated data

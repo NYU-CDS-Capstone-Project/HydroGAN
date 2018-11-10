@@ -1024,10 +1024,10 @@ for t in range(max_iter):
 
 
                     #histogram
-                    2_hist_plot(recon_plot, real_plot, t,'hist_', 0)
+                    mmd_hist_plot(recon_plot, real_plot, t,'hist_', 0)
 
                     #pdf
-                    2_hist_plot(recon_plot, real_plot, t,'log_', 1)
+                    mmd_hist_plot(recon_plot, real_plot, t,'log_', 1)
 
                     
                     
@@ -1054,10 +1054,10 @@ for t in range(max_iter):
 
 
                     #histogram
-                    2_hist_plot(recon_plot_, real_plot_, t, 'hist_log_', 0)
+                    mmd_hist_plot(recon_plot_, real_plot_, t, 'hist_log_', 0)
 
                     #pdf
-                    2_hist_plot(recon_plot_, real_plot_, t,  'pdf_log_', 1)
+                    mmd_hist_plot(recon_plot_, real_plot_, t,  'pdf_log_', 1)
 
                     #                     plt.show()
 
@@ -1229,37 +1229,13 @@ for t in range(max_iter):
             
             if plotted_3 < 1:
                 # plotting Generator plots
-                plt.figure(figsize = (10,5))
-                plt.title("mmd2_G_before_ReLU_list")
-                plt.plot(mmd2_G_before_ReLU_list)
-                plt.savefig(redshift_fig_folder + 'mmd2_G_before_ReLU_list_' + str(t) + '.png', 
-                            bbox_inches='tight')
-                plt.show() 
-                plt.close()
-                    #                 plt.show() 
-                plt.figure(figsize = (10,5))
-                plt.title("mmd2_G_after_ReLU_list")
-                plt.plot(mmd2_G_after_ReLU_list)
-                plt.savefig(redshift_fig_folder + 'mmd2_G_after_ReLU_list_' + str(t) + '.png', 
-                            bbox_inches='tight')
-                plt.show() 
-                plt.close()
-                #                 plt.show() 
-                plt.figure(figsize = (10,5))
-                plt.title("one_side_errG_list")
-                plt.plot(one_side_errG_list)
-                plt.savefig(redshift_fig_folder + 'one_side_errG_list_' + str(t) + '.png', 
-                            bbox_inches='tight')
-                plt.show() 
-                plt.close()
-                #                 plt.show() 
-                plt.figure(figsize = (10,5))
-                plt.title("errG_list")
-                plt.plot(errG_list)
-                plt.savefig(redshift_fig_folder + 'errG_list_' + str(t) + '.png', 
-                            bbox_inches='tight')
-                plt.show() 
-                plt.close()
+
+                titles_to_plot = ["mmd2_G_before_ReLU_list", "mmd2_G_after_ReLU_list", "one_side_errG_list", "errG_list"] 
+                data_to_plot = [mmd2_G_before_ReLU_list, mmd2_G_after_ReLU_list, one_side_errG_list, errG_list]
+
+                for p in range(len(data_to_plot)):
+                    mmd_D_loss(p, titles_to_plot[p-1], data_to_plot[p-1], redshift_fig_folder)
+
                 #                 plt.show()            
             
                 plotted_3 = plotted_3 + 1
