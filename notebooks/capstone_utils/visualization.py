@@ -118,7 +118,10 @@ def visualize_cube(cube=None,      ## array name
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
 
-    s = norm_multiply * data_1dim
+    if lognormal == False:
+        s = norm_multiply * data_1dim
+    else:
+        s = np.log(norm_multiply*data_1dim)
 
     """
     The nn.linalg.norm should not be used due to the fact 
