@@ -920,6 +920,8 @@ for t in range(max_iter):
             mmd2_D = mix_rbf_mmd2(f_enc_X_D, 
                                   f_enc_Y_D, 
                                   sigma_list)
+
+
 #             mmd2_D = poly_mmd2(f_enc_X_D, f_enc_Y_D)
 #             mmd2_D = linear_mmd2(f_enc_X_D, f_enc_Y_D)
             
@@ -977,51 +979,13 @@ for t in range(max_iter):
             # Plotting Discriminator Plots
             if j % 5 == 0 and plotted < 1:
                 try:
-                    plt.figure(1, figsize = (10,5))
-                    plt.title("mmd2_D_before_ReLU_list")
-                    plt.plot(mmd2_D_before_ReLU_list)
-                    plt.savefig(redshift_fig_folder + 'mmd2_D_before_ReLU_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.close()
-#                     plt.show() 
-                    plt.figure(2, figsize = (10,5))
-                    plt.title("mmd2_D_after_ReLU_list")
-                    plt.plot(mmd2_D_after_ReLU_list)
-                    plt.savefig(redshift_fig_folder + 'mmd2_D_after_ReLU_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    plt.figure(3, figsize = (10,5))
-                    plt.title("one_side_errD_list")
-                    plt.plot(one_side_errD_list)
-                    plt.savefig(redshift_fig_folder + 'one_side_errD_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    #                     plt.show() 
-                    plt.figure(4, figsize = (10,5))
-                    plt.title("L2_AE_X_D_list")
-                    plt.plot(L2_AE_X_D_list)
-                    plt.savefig(redshift_fig_folder + 'L2_AE_X_D_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    #                     plt.show() 
-                    plt.figure(5, figsize = (10,5))
-                    plt.title("L2_AE_Y_D_list")
-                    plt.plot(L2_AE_Y_D_list)
-                    plt.savefig(redshift_fig_folder + 'L2_AE_Y_D_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    #                     plt.show() 
-                    plt.figure(6, figsize = (10,5))
-                    plt.title("errD_list - D loss goes to 0: failure mode")
-                    plt.plot(errD_list)
-                    plt.savefig(redshift_fig_folder + 'errD_list_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
+
+                    titles_to_plot = ["mmd2_D_before_ReLU_list","mmd2_D_after_ReLU_list","one_side_errD_list","L2_AE_X_D_list","L2_AE_Y_D_list","errD_list - D loss goes to 0: failure mode"] 
+                    data_to_plot = [mmd2_D_before_ReLU_list,mmd2_D_after_ReLU_list,one_side_errD_list,L2_AE_X_D_list,L2_AE_Y_D_list,errD_list]
+
+                    for p in range(len(data_to_plot)):
+                        mmd_D_loss(p, titles_to_plot[p-1], data_to_plot[p-1], redshift_fig_folder)
+
                     #                     plt.show() 
 
                     # plot output of the discriminator with real data input
@@ -1056,51 +1020,18 @@ for t in range(max_iter):
                     print("max(recon_plot) = " + str(max(recon_plot)))
                     print("min(real_plot) = " + str(min(real_plot)))
                     print("min(recon_plot) = " + str(min(recon_plot)))
+
+
+
+                    #histogram
+                    2_hist_plot(recon_plot, real_plot, t,'hist_', 0)
+
+                    #pdf
+                    2_hist_plot(recon_plot, real_plot, t,'log_', 1)
+
                     
-                    plt.figure(figsize = (16,8))
-                    plt.title("Histograms of Hydrogen")
-                    plt.xlim(min(recon_plot.min(),real_plot.min()),
-                            max(recon_plot.max(),real_plot.max()))
-                    bins = np.linspace(min(recon_plot.min(),real_plot.min()),
-                                       max(recon_plot.max(),real_plot.max()), 
-                                       100)
-                    plt.hist(recon_plot, bins = bins, 
-                             color = "red" ,
-                             alpha= 0.5, 
-                             label = "Generator(Noise) Subcube - Only Nonzero")
-                    plt.hist(real_plot, bins = bins, 
-                             color = "blue" ,
-                             alpha = 0.3, 
-                             label = "Real Sample Subcube - Only Nonzero")
-                    plt.legend()
-                    plt.savefig(redshift_fig_folder + 'hist_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    #                     plt.show()
                     
-                    plt.figure(figsize = (16,8))
-                    plt.title("PDFs of Hydrogen")
-                    plt.xlim(min(recon_plot.min(),real_plot.min()),
-                            max(recon_plot.max(),real_plot.max()))
-                    bins = np.linspace(min(recon_plot.min(),real_plot.min()),
-                                       max(recon_plot.max(),real_plot.max()), 
-                                       100)
-                    plt.hist(recon_plot, bins = bins, 
-                             color = "red" ,
-                             alpha= 0.5, 
-                             label = "Generator(Noise) Subcube - Only Nonzero",
-                             density = True)
-                    plt.hist(real_plot, bins = bins, 
-                             color = "blue" ,
-                             alpha = 0.3, 
-                             label = "Real Sample Subcube - Only Nonzero",
-                             density = True)
-                    plt.legend()
-                    plt.savefig(redshift_fig_folder + 'pdf_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
+                    
                     #                     plt.show()
 
 #                     plt.figure(figsize = (16,8))
@@ -1114,53 +1045,20 @@ for t in range(max_iter):
                     """
                     Plotting the log histograms & PDF
                     """
-                    recon_plot = np.log(recon_plot)
-                    real_plot = np.log(real_plot)
-        
-                    plt.figure(figsize = (16,8))
-                    plt.title("Histograms of Hydrogen")
-                    plt.xlim(min(recon_plot.min(),real_plot.min()),
-                            max(recon_plot.max(),real_plot.max()))
-                    bins = np.linspace(min(recon_plot.min(),real_plot.min()),
-                                       max(recon_plot.max(),real_plot.max()), 
-                                       100)
-                    plt.hist(recon_plot, bins = bins, 
-                             color = "red" ,
-                             alpha= 0.5, 
-                             label = "Generator(Noise) Subcube - Only Nonzero")
-                    plt.hist(real_plot, bins = bins, 
-                             color = "blue" ,
-                             alpha = 0.3, 
-                             label = "Real Sample Subcube - Only Nonzero")
-                    plt.legend()
-                    plt.savefig(redshift_fig_folder + 'hist_log_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
-                    #                     plt.show()
-                    
-                    plt.figure(figsize = (16,8))
-                    plt.title("PDFs of Hydrogen")
-                    plt.xlim(min(recon_plot.min(),real_plot.min()),
-                            max(recon_plot.max(),real_plot.max()))
-                    bins = np.linspace(min(recon_plot.min(),real_plot.min()),
-                                       max(recon_plot.max(),real_plot.max()), 
-                                       100)
-                    plt.hist(recon_plot, bins = bins, 
-                             color = "red" ,
-                             alpha= 0.5, 
-                             label = "Generator(Noise) Subcube - Only Nonzero",
-                             density = True)
-                    plt.hist(real_plot, bins = bins, 
-                             color = "blue" ,
-                             alpha = 0.3, 
-                             label = "Real Sample Subcube - Only Nonzero",
-                             density = True)
-                    plt.legend()
-                    plt.savefig(redshift_fig_folder + 'pdf_log_' + str(t) + '.png', 
-                                bbox_inches='tight')
-                    plt.show() 
-                    plt.close()
+                    #normalize between 0-1 before plotting
+                    recon_plot_ = cube_scaler_for_plotting(sampled_subcubes,recon_plot)
+                    real_plot_ = cube_scaler_for_plotting(sampled_subcubes,real_plot)
+
+                    recon_plot_ = np.log(recon_plot_)
+                    real_plot_ = np.log(real_plot_)
+
+
+                    #histogram
+                    2_hist_plot(recon_plot_, real_plot_, t, 'hist_log_', 0)
+
+                    #pdf
+                    2_hist_plot(recon_plot_, real_plot_, t,  'pdf_log_', 1)
+
                     #                     plt.show()
 
                 except:
