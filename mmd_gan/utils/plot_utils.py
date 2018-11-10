@@ -1,3 +1,19 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import itertools
+from matplotlib.ticker import MultipleLocator
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import colors
+import h5py
+import matplotlib as mpl
+from pathlib import Path
+
+
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     """Function for dividing/truncating cmaps"""
     new_cmap = colors.LinearSegmentedColormap.from_list(
@@ -12,17 +28,28 @@ def visualize_cube(cube=None,      # array name
              start_cube_index_y=0,
              start_cube_index_z=0,
              fig_size=None,
-             stdev_to_white=1,
-             norm_multiply=viz_multiplier,
+#              stdev_to_white=-3,
+             norm_multiply=1e2,
+             size_magnitude = False,
              color_map="Blues",
              plot_show = False,
              save_fig = False):
     
-    """
-    The inputs should be in the interval [0,1]
-    All the transformations on the input
-    should be done before passing
-    into the function.
+    """Takes as input;
+    - cube: A 3d numpy array to visualize,
+    - edge_dim: edge length,
+    - fig_size: Figure size for the plot,
+    - norm_multiply: Multiplication factor to enable matplotlib to 'see' the particles,
+    - color_map: A maplotlib colormap of your choice,
+    - lognormal: Whether to apply lognormal transformation or not. False by default.
+    
+    Returns: 
+    - The cube visualization
+    
+    TODO:
+    - Plotting everypoint with colorscale from 0 to 1 takes a really long time
+    
+    
     """
         
     cube_size = edge_dim
@@ -50,11 +77,11 @@ def visualize_cube(cube=None,      # array name
     data_1dim = np.array([data_value[X[i]][Y[i]][Z[i]] for i in [*range(len(product))]])
     
     
-    initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
-    mask = data_1dim > initial_mean
-    mask = mask.astype(np.int)
+#     initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
+#     mask = data_1dim > initial_mean
+#     mask = mask.astype(np.int)
     
-    data_1dim = np.multiply(mask,data_1dim)
+#     data_1dim = np.multiply(mask,data_1dim)
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
 
@@ -73,7 +100,11 @@ def visualize_cube(cube=None,      # array name
     """
         
 #         s = norm_multiply*data_1dim/np.linalg.norm(data_1dim)
-    s = norm_multiply * data_1dim
+
+    if size_magnitude == True:
+        s = norm_multiply * data_1dim
+    else:
+        s = norm_multiply * np.ones_like(a = data_1dim)
 
     # adding this for [-1,1] scaled input
     # so that s is between [0,1]
@@ -89,8 +120,17 @@ def visualize_cube(cube=None,      # array name
         print("s min = " + str(s.min()))
 
 
-        cmap=plt.get_cmap(color_map)
-        new_cmap = truncate_colormap(cmap, 0.99, 1,n=10)
+        """
+        Truncating the colormap has the effect of showing even really small
+        densities. 
+        0 = white
+        1 = full color
+        minval = 0.99 -> even 0 densities are shown with 0.99 color
+        n = number of division between minval and maxval of color
+        
+        """
+        cmap = plt.get_cmap(color_map)
+        new_cmap = truncate_colormap(cmap, minval = 0, maxval = 1,n=10)
 
         ## IGNORE BELOW 3D PLOT FORMATTING 
 
@@ -178,7 +218,6 @@ def visualize_cube(cube=None,      # array name
         if plot_show:
             plt.show()
 
-
         if save_fig:
             fig.savefig(save_fig,bbox_inches='tight')
 
@@ -186,4 +225,11 @@ def visualize_cube(cube=None,      # array name
     
     except:
         pass
+    
+    
+
+    
+    
+    
+    
 

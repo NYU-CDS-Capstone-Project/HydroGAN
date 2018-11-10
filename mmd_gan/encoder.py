@@ -1,13 +1,13 @@
-
+import torch.nn as nn
+from utils.conv_utils import calculate_conv_output_dim, calculate_pool_output_dim
 
 # input: batch_size * nc * 64 * 64
 # output: batch_size * k * 1 * 1
 class Encoder(nn.Module):
-    def __init__(self, cube_dimension,fc1_hidden_dim, 
-                embedding_dim, leakyrelu_const, batch_size, pool_return_indices = False):        
+    def __init__(self, cube_dimension, fc1_hidden_dim, fc2_output_dim, 
+                embedding_dim, leakyrelu_const, pool_return_indices):        
         super(Encoder, self).__init__()
 
-        self.batch_size = batch_size
         self.pool_return_indices = pool_return_indices
       
         # First Convolutional Layer
@@ -126,7 +126,7 @@ class Encoder(nn.Module):
         # Fifth Convolutional Layer
         self.conv5_in_channels = self.conv4_out_channels
         self.conv5_out_channels = 64
-        self.conv5_kernel = 2
+        self.conv5_kernel = 3
         self.conv5_stride = 1
         self.conv5_padding = 0
         conv5_output_dim = calculate_conv_output_dim(D=conv4_output_dim,
@@ -182,8 +182,8 @@ class Encoder(nn.Module):
         nn.init.xavier_uniform_(self.conv7_encode.weight) 
         self.bn7_encode = nn.BatchNorm3d(num_features = self.conv7_out_channels)
         self.leakyrelu7 = nn.LeakyReLU(leakyrelu_const, inplace=True)
-
-#         # 1st FC Layer
+     
+    #         # 1st FC Layer
 #         self.fc1_in_features = self.conv7_out_channels * conv7_output_dim**3
 #         self.fc1_encode = nn.Linear(in_features=self.fc1_in_features,
 #                                     out_features=fc1_hidden_dim)
@@ -199,35 +199,49 @@ class Encoder(nn.Module):
     def forward(self, input):
         
         # Convolution Layers
+#         print("Input = " +str(input.shape))
         out = self.conv1_encode(input)
+#         print("conv1_encode = " + str(out.shape))
         out = self.pool1_encode(out)
+#         print("pool1_encode = " + str(out.shape))
         out = self.bn1_encode(out) 
         out = self.leakyrelu1(out)
 
         out = self.conv2_encode(out)
+#         print("conv2_encode = " + str(out.shape))
         out = self.pool2_encode(out)
+#         print("pool2_encode = " + str(out.shape))
         out = self.bn2_encode(out) 
         out = self.leakyrelu2(out)
 
         out = self.conv3_encode(out)
+#         print("conv3_encode = " + str(out.shape))
         out = self.pool3_encode(out)
+#         print("pool3_encode = " + str(out.shape))
         out = self.bn3_encode(out) 
         out = self.leakyrelu3(out)
 
         out = self.conv4_encode(out)
-        out = self.pool4_encode(out)
+#         print("conv4_encode = " + str(out.shape))
         out = self.bn4_encode(out) 
         out = self.leakyrelu4(out)
 
         out = self.conv5_encode(out)
-        out = self.pool5_encode(out)
+#         print("conv5_encode = " + str(out.shape))
         out = self.bn5_encode(out) 
         out = self.leakyrelu5(out)
 
         out = self.conv6_encode(out)
-        out = self.pool6_encode(out)
+#         print("conv6_encode = " + str(out.shape))
         out = self.bn6_encode(out) 
         out = self.leakyrelu6(out)
+        
+        out = self.conv7_encode(out)
+#         print("conv7_encode = " + str(out.shape))
+        out = self.bn7_encode(out) 
+        out = self.leakyrelu7(out)
+        
+#         print("out = " + str(out.shape))
 
 #         # Transform
 #         out = out.view(self.batch_size, -1)

@@ -1,10 +1,11 @@
-
+import torch.nn as nn
+from utils.conv_utils import calculate_deconv_output_dim
 
 # input: batch_size * k * 1 * 1
 # output: batch_size * nc * image_size * image_size
 class Decoder(nn.Module):
-    def __init__(self, cube_dimension,fc1_hidden_dim, fc2_output_dim, 
-                embedding_dim, leakyrelu_const, batch_size):
+    def __init__(self, embedded_cube_dimension,fc1_hidden_dim, fc2_output_dim, 
+                embedding_dim, leakyrelu_const):
         super(Decoder, self).__init__()
 
 #         # 1st FC Layer
@@ -27,17 +28,17 @@ class Decoder(nn.Module):
         self.deconv1_kernel = 2
         self.deconv1_stride = 1
         self.deconv1_padding = 0
-        deconv1_output_dim = calculate_deconv_output_dim(D=cube_dimension,
+        deconv1_output_dim = calculate_deconv_output_dim(D=embedded_cube_dimension,
                                         K=self.deconv1_kernel,
                                         P=self.deconv1_padding,
                                         S=self.deconv1_stride)
         print("Deconv1 Output Dimension = " + str(deconv1_output_dim))
-        self.deconv1_decode = nn.Conv3d(in_channels=self.deconv1_in_channels, 
+        self.deconv1_decode = nn.ConvTranspose3d(in_channels=self.deconv1_in_channels, 
                                     out_channels=self.deconv1_out_channels, 
                                     kernel_size=self.deconv1_kernel, 
                                     stride =self.deconv1_stride, 
                                     padding=self.deconv1_padding)     
-        nn.init.xavier_uniform_(self.deconv1_encode.weight)
+        nn.init.xavier_uniform_(self.deconv1_decode.weight)
         self.bn1_decode = nn.BatchNorm3d(num_features = self.deconv1_out_channels)
         self.leakyrelu1 = nn.LeakyReLU(leakyrelu_const, inplace=True)
 
@@ -57,14 +58,14 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv2_kernel, 
                                     stride =self.deconv2_stride, 
                                     padding=self.deconv2_padding)     
-        nn.init.xavier_uniform_(self.deconv2_encode.weight)
+        nn.init.xavier_uniform_(self.deconv2_decode.weight)
         self.bn2_decode = nn.BatchNorm3d(num_features = self.deconv2_out_channels)
         self.leakyrelu2 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
         # 3rd Deconvolutional Layer
         self.deconv3_in_channels = self.deconv2_out_channels
         self.deconv3_out_channels = 32
-        self.deconv3_kernel = 2
+        self.deconv3_kernel = 3
         self.deconv3_stride = 1
         self.deconv3_padding = 0
         deconv3_output_dim = calculate_deconv_output_dim(D=deconv2_output_dim,
@@ -77,15 +78,15 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv3_kernel, 
                                     stride =self.deconv3_stride, 
                                     padding=self.deconv3_padding)     
-        nn.init.xavier_uniform_(self.deconv3_encode.weight)
+        nn.init.xavier_uniform_(self.deconv3_decode.weight)
         self.bn3_decode = nn.BatchNorm3d(num_features = self.deconv3_out_channels)
         self.leakyrelu3 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
         # 4th Deconvolutional Layer
         self.deconv4_in_channels = self.deconv3_out_channels
         self.deconv4_out_channels = 24
-        self.deconv4_kernel = 2
-        self.deconv4_stride = 1
+        self.deconv4_kernel = 4
+        self.deconv4_stride = 2
         self.deconv4_padding = 0
         deconv4_output_dim = calculate_deconv_output_dim(D=deconv3_output_dim,
                                         K=self.deconv4_kernel,
@@ -97,7 +98,7 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv4_kernel, 
                                     stride =self.deconv4_stride, 
                                     padding=self.deconv4_padding)     
-        nn.init.xavier_uniform_(self.deconv4_encode.weight)
+        nn.init.xavier_uniform_(self.deconv4_decode.weight)
         self.bn4_decode = nn.BatchNorm3d(num_features = self.deconv4_out_channels)
         self.leakyrelu4 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
@@ -114,7 +115,7 @@ class Decoder(nn.Module):
         self.deconv5_kernel = 3
         self.deconv5_stride = 1
         self.deconv5_padding = 0
-        deconv5_output_dim = calculate_deconv_output_dim(D=deconv4_output_dim * self.avgunpool1_scale = 2,
+        deconv5_output_dim = calculate_deconv_output_dim(D=deconv4_output_dim * self.avgunpool1_scale,
                                         K=self.deconv5_kernel,
                                         P=self.deconv5_padding,
                                         S=self.deconv5_stride)
@@ -124,7 +125,7 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv5_kernel, 
                                     stride =self.deconv5_stride, 
                                     padding=self.deconv5_padding)     
-        nn.init.xavier_uniform_(self.deconv5_encode.weight)
+        nn.init.xavier_uniform_(self.deconv5_decode.weight)
         self.bn5_decode = nn.BatchNorm3d(num_features = self.deconv5_out_channels)
         self.leakyrelu5 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
@@ -141,7 +142,7 @@ class Decoder(nn.Module):
         self.deconv6_kernel = 4
         self.deconv6_stride = 1
         self.deconv6_padding = 0
-        deconv6_output_dim = calculate_deconv_output_dim(D=deconv5_output_dim * self.avgunpool2_scale = 2,
+        deconv6_output_dim = calculate_deconv_output_dim(D=deconv5_output_dim * self.avgunpool2_scale,
                                         K=self.deconv6_kernel,
                                         P=self.deconv6_padding,
                                         S=self.deconv6_stride)
@@ -151,7 +152,7 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv6_kernel, 
                                     stride =self.deconv6_stride, 
                                     padding=self.deconv6_padding)     
-        nn.init.xavier_uniform_(self.deconv6_encode.weight)
+        nn.init.xavier_uniform_(self.deconv6_decode.weight)
         self.bn6_decode = nn.BatchNorm3d(num_features = self.deconv6_out_channels)
         self.leakyrelu6 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
@@ -167,7 +168,7 @@ class Decoder(nn.Module):
         self.deconv7_kernel = 3
         self.deconv7_stride = 1
         self.deconv7_padding = 0
-        deconv7_output_dim = calculate_deconv_output_dim(D=deconv6_output_dim * self.avgunpool3_scale = 2,
+        deconv7_output_dim = calculate_deconv_output_dim(D=deconv6_output_dim * self.avgunpool3_scale,
                                         K=self.deconv7_kernel,
                                         P=self.deconv7_padding,
                                         S=self.deconv7_stride)
@@ -177,52 +178,70 @@ class Decoder(nn.Module):
                                     kernel_size=self.deconv7_kernel, 
                                     stride =self.deconv7_stride, 
                                     padding=self.deconv7_padding)     
-        nn.init.xavier_uniform_(self.deconv7_encode.weight)
+        nn.init.xavier_uniform_(self.deconv7_decode.weight)
         self.bn7_decode = nn.BatchNorm3d(num_features = self.deconv7_out_channels)
-        self.leakyrelu7 = nn.LeakyReLU(leakyrelu_const, inplace=True)
+#         self.leakyrelu7 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
+        # For data in [0,1]
+#         self.relu7 = nn.ReLU(inplace=True)     
+        # For data in [-1,1]
+        self.tanh7 = nn.Tanh() 
         
 
 
     def forward(self, input):
+#         print("\nDecoder - Forward Pass")
         
         # Deconvolution Layers
+#         print("Input = " +str(input.shape))
         out = self.deconv1_decode(input)
+#         print("deconv1_decode = " + str(out.shape))
         out = self.bn1_decode(out)
         out = self.leakyrelu1(out)
 
         out = self.deconv2_decode(out)
+#         print("deconv2_decode = " + str(out.shape))
         out = self.bn2_decode(out)
         out = self.leakyrelu2(out)
         
         out = self.deconv3_decode(out)
+#         print("deconv3_decode = " + str(out.shape))
         out = self.bn3_decode(out)
         out = self.leakyrelu3(out)
         
         out = self.deconv4_decode(out)
+#         print("deconv4_decode = " + str(out.shape))
         out = self.bn4_decode(out)
         out = self.leakyrelu4(out)
         out = self.avgunpool1(out)
+#         print("avgunpool1 = " + str(out.shape))
 
         out = self.deconv5_decode(out)
+#         print("deconv5_decode = " + str(out.shape))
         out = self.bn5_decode(out)
         out = self.leakyrelu5(out)
         out = self.avgunpool2(out)
+#         print("avgunpool2 = " + str(out.shape))
         
         out = self.deconv6_decode(out)
+#         print("deconv6_decode = " + str(out.shape))
         out = self.bn6_decode(out)
         out = self.leakyrelu6(out)
-        out = self.avgunpool3(out)   
+        out = self.avgunpool3(out) 
+#         print("avgunpool3 = " + str(out.shape))
         
         out = self.deconv7_decode(out)
+#         print("deconv7_decode = " + str(out.shape))
         out = self.bn7_decode(out)
-        out = self.leakyrelu7(out)
+#         out = self.leakyrelu7(out)
+#         out = self.relu7(out) # for [0,1]
+        out = self.tanh7(out) # for [-1,1]
         
-
+#         print("decoder out = " + str(out.shape))
 #         # Transformation
 #         out = out.view(batch_size, nz, 1,1,1)
         
-        return output
+        return out
     
     
     

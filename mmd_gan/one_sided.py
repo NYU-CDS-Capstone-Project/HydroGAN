@@ -1,3 +1,5 @@
+import torch.nn as nn
+
 class ONE_SIDED(nn.Module):
     """
     rank hinge loss

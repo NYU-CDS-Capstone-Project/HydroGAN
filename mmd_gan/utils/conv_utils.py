@@ -14,3 +14,11 @@ def calculate_deconv_output_dim(D,K,P,S):
 
     out_dim = S * (D-1) - 2*P + K
     return out_dim
+
+def calculate_unpool_output_dim(D,K,P,S):
+    """
+    Source: https://pytorch.org/docs/stable/nn.html # MaxUnpool1d
+    """
+
+    out_dim = S * (D-1) - 2*P + K 
+    return out_dim

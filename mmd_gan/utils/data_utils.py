@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_max_cube(f):
     max_list = [np.max(f[i:i+1,:,:]) for i in range(f.shape[0])]
     max_cube = max(max_list)
