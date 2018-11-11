@@ -92,7 +92,7 @@ def visualize_cube(cube=None,      # array name
     
     ## map data to 1d array that corresponds to the axis values in the product array
     data_1dim = np.array([data_value[X[i]][Y[i]][Z[i]] for i in [*range(len(product))]])
-    
+#     print("data_1dim = " + str(data_1dim))
     
 #     initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
 #     mask = data_1dim > initial_mean
@@ -106,7 +106,7 @@ def visualize_cube(cube=None,      # array name
 #     data_1dim = np.multiply(mask,data_1dim)
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
-
+    
     """
     norm_multiply = function argument
     data_1dim = data in one dimension, flattened
@@ -122,17 +122,11 @@ def visualize_cube(cube=None,      # array name
         s = norm_multiply * data_1dim
     else:
         s = norm_multiply * np.ones_like(a = data_1dim)
-        
+    
     """
     s radius limit
     """
-
-    # adding this for [-1,1] scaled input
-    # so that s is between [0,1]
-#         s = (s + 1.0) / 2.0 
-    
-#     else:
-#         s = np.log(norm_multiply*data_1dim/np.linalg.norm(data_1dim))
+#     print("s = " + str(s))
 
     time_2 = timeit.default_timer()
 #     print("Section 2 time = " + str((time_2 - time_1)/60))
@@ -332,13 +326,13 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
     plt.hist(recon_noise, 
              bins = bins, 
          color = "lightblue" ,
-         alpha= 0.2, 
+         alpha= 0.4, 
          label = recon_noise_label,
             density = plot_pdf)
     plt.hist(recon_real, 
              bins = bins, 
          color = "orange" ,
-         alpha= 0.2, 
+         alpha= 0.4, 
          label = recon_real_label,
             density = plot_pdf)
 

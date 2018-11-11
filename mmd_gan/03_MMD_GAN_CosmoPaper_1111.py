@@ -5,6 +5,24 @@
 # 
 # To check GPU usage, open new terminal inside Jupyter and nvidia-smi
 
+# To run with sbatch, 
+# * change the jupyter notebook parameters
+#     * batch_size
+#     * nz (= output channels in the embedding)
+#     * lr
+#     * optimizer_choice
+#     * dist_ae
+#     * left_clamp & right_clamp
+#     * plot_show_3d = False
+#     * plot_save_3d = True
+#     * experiment = a folder to output to (drive_output is a good name)
+#     * redshift_raw_file = raw data file like fields_z=0.0.hdf5
+#     * redshift_file = transformed data file like minmax_scale_neg11_redshift0.h5
+#     * inverse_transform = one of minmax11 / minmaxneg11 / std_noshift / std based on the transformed data file
+#     * 
+# * change the file name inside the run-mmdgan-110919.sbatch file
+# * do: sbatch run-mmdgan-110918.sbatch
+
 # In[1]:
 
 
@@ -128,7 +146,7 @@ scatter_size_magnitude = False  # change scatter point radius based on the value
 
 root_dir = "./"  # this goes to 
 data_dir = "../"
-experiment = root_dir + "mmd-jupyter/"       # : output directory of saved models
+experiment = root_dir + "drive_output/"       # : output directory of saved models
 model_save_folder = experiment + "model/"
 redshift_fig_folder = experiment + "figures/"        # folder to save mmd & related plots
 redshift_3dfig_folder = experiment + "/3d_figures/"   # folder to save 3D plots
@@ -193,7 +211,7 @@ print("log('asdas') output = " + str(log("asdas")))
 print("Batch Size = " + str(batch_size))
 print("Redshift File Used = " + str(redshift_file))
 print("Number of Channels in Input = " + str(nc))
-print("Hidden Dimension (codespace) = " + str(nz))
+print("Hidden Dimension (codespace) (nz)= " + str(nz))
 print("Length of Edge of a Sampled Subcube = " + str(cube_size))
 print("Learning Rate = " + str(lr))
 print("Number of Epochs = " + str(max_iter))
@@ -1078,23 +1096,12 @@ for t in range(max_iter):
                     real_cube = real_cube[np.nonzero(real_cube)]
     #                 recon_plot = recon_plot[np.greater(recon_plot, 0)]
                     
-    #                 print("max(x[0] - nonzero) = " + str(max(real_plot)))
-    #                 print("max(y[0] - nonzero) = " + str(max(recon_plot)))
-    #                 print("min(x[0] - nonzero) = " + str(min(real_plot)))
-    #                 print("min(y[0] - nonzero) = " + str(min(recon_plot)))
-    #                 recon_plot = recon_plot + 1
-    #                 real_plot = real_plot + 1
-
 #                     print("len(real_plot) - nonzero elements = " + str(len(real_plot)))
 #                     print("len(recon_plot) - nonzero elements = " + str(len(recon_plot)))
     #                 log_nonzero_real_list.append(len(real_plot))
     #                 log_nonzero_recon_list.append(len(recon_plot))
 
 #                     log_nonzero_recon_over_real_list.append(len(recon_plot) / len(real_plot))
-#                     print("max(real_plot) = " + str(max(real_plot)))
-#                     print("max(recon_plot) = " + str(max(recon_plot)))
-#                     print("min(real_plot) = " + str(min(real_plot)))
-#                     print("min(recon_plot) = " + str(min(recon_plot)))
                     
                     mmd_hist_plot(noise = noise_gen_cube, 
                                   real = real_cube, 
@@ -1150,9 +1157,34 @@ for t in range(max_iter):
                 
                 
                 
-            if plotted_2 < 1 and t % 5 == 0 and t > 25:
+            if plotted_2 < 1 and t % 10 == 0 and t >= 0:
  
-                # Plot the 3D Cubes
+                # reshaping DOESNT WORK due to nonzero() -> reshaping 1D to 3D with cube_size edges
+                # so just getting them again works.
+                real_ae_cube = f_dec_X_D[random_batch].cpu().view(128,128,128).detach().numpy()
+                noise_ae_cube = f_dec_Y_D[random_batch].cpu().view(128,128,128).detach().numpy()
+                noise_gen_cube = y[random_batch][0].cpu().detach().numpy()
+                real_cube = x[random_batch][0].cpu().detach().numpy()
+
+                real_ae_cube = inverse_transform_func(cube = real_ae_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                noise_ae_cube = inverse_transform_func(cube = noise_ae_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                noise_gen_cube = inverse_transform_func(cube = noise_gen_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                real_cube = inverse_transform_func(cube = real_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+
+                print("real_ae_cube shape = " + str(real_ae_cube.shape))
+                print("noise_ae_cube shape = " + str(noise_ae_cube.shape))
+                print("noise_gen_cube shape = " + str(noise_gen_cube.shape))
+                print("real_cube shape = " + str(real_cube.shape))
+            
+#                 # Plot the 3D Cubes
                 print("\nReconstructed, AutoEncoder Generated Real Cube")
 #                 recon_real_viz = 
                 visualize_cube(cube=real_ae_cube,      ## array name
