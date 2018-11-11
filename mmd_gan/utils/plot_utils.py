@@ -11,6 +11,8 @@ from matplotlib import colors
 import h5py
 import matplotlib as mpl
 from pathlib import Path
+import timeit
+
 
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
@@ -32,6 +34,7 @@ def visualize_cube(cube=None,      # array name
              size_magnitude = False,
              color_map="Blues",
              plot_show = False,
+             plot_save = False,
              save_fig = False):
     
     """Takes as input;
@@ -40,16 +43,22 @@ def visualize_cube(cube=None,      # array name
     - fig_size: Figure size for the plot,
     - norm_multiply: Multiplication factor to enable matplotlib to 'see' the particles,
     - color_map: A maplotlib colormap of your choice,
-    - lognormal: Whether to apply lognormal transformation or not. False by default.
     
     Returns: 
     - The cube visualization
+    - Also saves PNG file
     
     TODO:
-    - Plotting everypoint with colorscale from 0 to 1 takes a really long time
+    - Plot only the values > some value
+    - timing of each part
+    
+    PROBLEMS:
+    - Plotting everypoint (not truncating) with colorscale from 0 to 1 takes a really long time
+    - size = magnitude -> some dots get too big to obscure view
     
     
     """
+    time_start = timeit.default_timer()
         
     cube_size = edge_dim
     edge = np.array([*range(cube_size)])
@@ -72,6 +81,10 @@ def visualize_cube(cube=None,      # array name
     Y = np.array([product[k][1] for k in [*range(len(product))]])
     Z = np.array([product[k][2] for k in [*range(len(product))]])
     
+    time_1 = timeit.default_timer()
+    print("Section 1 time = " + str((time_1 - time_start)/60))
+    # avg: 0.02 sec
+    
     ## map data to 1d array that corresponds to the axis values in the product array
     data_1dim = np.array([data_value[X[i]][Y[i]][Z[i]] for i in [*range(len(product))]])
     
@@ -79,6 +92,11 @@ def visualize_cube(cube=None,      # array name
 #     initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
 #     mask = data_1dim > initial_mean
 #     mask = mask.astype(np.int)
+
+    """
+    Masking part of the data to speed up plotting time
+    (may use just radius limiting below)
+    """
     
 #     data_1dim = np.multiply(mask,data_1dim)
     ## mask X,Y,Z to match the dimensions of the data
@@ -104,6 +122,10 @@ def visualize_cube(cube=None,      # array name
         s = norm_multiply * data_1dim
     else:
         s = norm_multiply * np.ones_like(a = data_1dim)
+        
+    """
+    s radius 
+    """
 
     # adding this for [-1,1] scaled input
     # so that s is between [0,1]
@@ -111,12 +133,16 @@ def visualize_cube(cube=None,      # array name
     
 #     else:
 #         s = np.log(norm_multiply*data_1dim/np.linalg.norm(data_1dim))
+
+    time_2 = timeit.default_timer()
+    print("Section 2 time = " + str((time_2 - time_1)/60))
+    # avg: 0.03 sec
+
     try:
         # checking min, max , mean of s
-        print("Plotting s (= norm_multiply * data_1dim) stats:")
-        print("s mean = " + str(s.mean()))
-        print("s max = " + str(s.max()))
-        print("s min = " + str(s.min()))
+        print("scatter size mean = " + str(s.mean()))
+        print("scatter size max = " + str(s.max()))
+        print("scatter size min = " + str(s.min()))
 
 
         """
@@ -129,7 +155,10 @@ def visualize_cube(cube=None,      # array name
         
         """
         cmap = plt.get_cmap(color_map)
-        new_cmap = truncate_colormap(cmap, minval = 0, maxval = 1,n=10)
+        new_cmap = truncate_colormap(cmap, 
+                                     minval = 0, 
+                                     maxval = 1,
+                                     n=100)
 
         ## IGNORE BELOW 3D PLOT FORMATTING 
 
@@ -206,6 +235,10 @@ def visualize_cube(cube=None,      # array name
         ax.yaxis._axinfo['tick']['outward_factor'] = 0
         ax.zaxis._axinfo['tick']['inward_factor'] = 0
         ax.zaxis._axinfo['tick']['outward_factor'] = 0
+        
+        time_3 = timeit.default_timer()
+        print("Section 3 time = " + str((time_3 - time_2)/60))
+        # avg: 0.0005 sec
 
         ax.scatter(X, Y, Z,       ## axis vals
                    c=data_1dim,   ## data, mapped to 1-dim
@@ -213,20 +246,30 @@ def visualize_cube(cube=None,      # array name
                    s=s,           ## sizes - dims multiplied by each data point's magnitude
                    alpha=0.7,
                    edgecolors="face")
-
+        
+        time_4 = timeit.default_timer()
+        print("Section 4 time = " + str((time_4 - time_3)/60))
+        # avg: 0.11 sec
+    
         if plot_show:
             plt.show()
+        
+        time_5 = timeit.default_timer()
+        print("Section 5 time = " + str((time_5 - time_4)/60))
+        # avg:  sec
 
-        if save_fig:
-            fig.savefig(save_fig,bbox_inches='tight')
+        if plot_save:
+            if save_fig:
+                fig.savefig(save_fig,bbox_inches='tight')
 
         plt.close(fig)
     
     except:
         pass
-
-
-def mmd_hist_plot(recon, real, epoch, file_name, hd ):
+    
+    
+    
+def mmd_hist_plot(recon, real, epoch, file_name, plot_pdf ):
     """
     Args:
         recon(): generated data
@@ -235,31 +278,28 @@ def mmd_hist_plot(recon, real, epoch, file_name, hd ):
         file_name(string): name of the file
         hd (integer) : if 0 it's a histogram, if 1 it's a pdf
         
-
     """
     plt.figure(figsize = (16,8))
-    plt.title("Histograms of Hydrogen")
+    if plot_pdf == False:
+        plt.title("Histograms of Hydrogen")
+    else:
+        plt.title("PDFs of Hydrogen")
     plt.xlim(min(recon.min(),real.min()),
             max(recon.max(),real.max()))
     bins = np.linspace(min(recon.min(),real.min()),
                        max(recon.max(),real.max()), 
                        100)
-    plt.hist(recon, bins = bins, 
-             color = "red" ,
-             alpha= 0.5, 
-             label = "Generator(Noise) Subcube - Only Nonzero")
 
-    if(hd==0):
-        plt.hist(real, bins = bins, 
-                 color = "blue" ,
-                 alpha = 0.3, 
-                 label = "Real Sample Subcube - Only Nonzero")
-    else:
-        plt.hist(real, bins = bins, 
-                 color = "blue" ,
-                 alpha = 0.3, 
-                 label = "Real Sample Subcube - Only Nonzero",
-                 density = True)
+    plt.hist(real, bins = bins, 
+             color = "blue" ,
+             alpha = 0.3, 
+             label = "Real Sample Subcube - Only Nonzero",
+             density = plot_pdf)
+    plt.hist(recon, bins = bins, 
+         color = "red" ,
+         alpha= 0.5, 
+         label = "Generator(Noise) Subcube - Only Nonzero",
+            density = plot_pdf)
 
     plt.legend()
     plt.savefig(redshift_fig_folder + file_name + str(epoch) + '.png', 
@@ -278,7 +318,6 @@ def mmd_D_loss_plot(fig_id, fig_title, data, save_direct ):
         fig_title(string): title of the figure
         data(): data to plot
         save_direct(string): directory to save
-
     """
     plt.figure(fig_id, figsize = (10,5))
     plt.title(fig_title)
@@ -286,19 +325,6 @@ def mmd_D_loss_plot(fig_id, fig_title, data, save_direct ):
     plt.savefig(dave_direct + fig_title +'_' + str(t) + '.png', 
                 bbox_inches='tight')
     plt.close()
-
-
-
-
-
-
-
-
-
-
-
-    
-    
 
     
     
