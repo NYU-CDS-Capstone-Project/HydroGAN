@@ -102,7 +102,8 @@ class HydrogenDataset(Dataset):
     """Hydrogen Dataset"""
 
     def __init__(self, h5_file, f, root_dir, s_test, s_train,
-                 s_sample, nsamples, min_cube, max_cube):
+                 s_sample, nsamples, min_cube, max_cube, mean_cube, stddev_cube,
+                min_raw_cube,max_raw_cube,mean_raw_cube,stddev_raw_cube):
         """
         Args:
             h5_file (string): name of the h5 file with 32 sampled cubes.
@@ -130,10 +131,19 @@ class HydrogenDataset(Dataset):
 #                              test_coords = self.t_coords)
 #         print("Got self.samples")
         
+        # Transformed Summary Statistics
         self.min_val = min_cube
 #         print("min = " + str(self.min_val))
         self.max_val = max_cube
 #         print("max = " + str(self.max_val))
+        self.mean_val = mean_cube
+        self.stddev_val = stddev_cube
+        
+        # Raw Data Summary Statistics
+        self.min_raw_val = min_raw_cube
+        self.max_raw_val = max_raw_cube
+        self.mean_raw_val = mean_raw_cube
+        self.stddev_raw_val = stddev_raw_cube
 
     def __len__(self):
         # Function called when len(self) is executed

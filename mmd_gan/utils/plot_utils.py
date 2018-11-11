@@ -11,6 +11,7 @@ from matplotlib import colors
 import h5py
 import matplotlib as mpl
 from pathlib import Path
+import utils.data_utils
 import timeit
 
 
@@ -37,6 +38,7 @@ def visualize_cube(cube=None,      # array name
              plot_save = False,
              save_fig = False):
     
+
     """Takes as input;
     - cube: A 3d numpy array to visualize,
     - edge_dim: edge length,
@@ -70,6 +72,9 @@ def visualize_cube(cube=None,      # array name
     fig = plt.figure(figsize=fig_size)
     ax = fig.add_subplot(111, projection='3d')
     
+    
+    
+    
     data_value = cube[start_cube_index_x:end_x,
                       start_cube_index_y:end_y,
                       start_cube_index_z:end_z]
@@ -82,7 +87,7 @@ def visualize_cube(cube=None,      # array name
     Z = np.array([product[k][2] for k in [*range(len(product))]])
     
     time_1 = timeit.default_timer()
-    print("Section 1 time = " + str((time_1 - time_start)/60))
+#     print("Section 1 time = " + str((time_1 - time_start)/60))
     # avg: 0.02 sec
     
     ## map data to 1d array that corresponds to the axis values in the product array
@@ -102,9 +107,6 @@ def visualize_cube(cube=None,      # array name
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
 
-    
-    
-#     if lognormal == False:
     """
     norm_multiply = function argument
     data_1dim = data in one dimension, flattened
@@ -115,8 +117,6 @@ def visualize_cube(cube=None,      # array name
     the whole cube and mitigate with norm_multiply if 
     no points are seen in the 3D plot.
     """
-        
-#         s = norm_multiply*data_1dim/np.linalg.norm(data_1dim)
 
     if size_magnitude == True:
         s = norm_multiply * data_1dim
@@ -124,7 +124,7 @@ def visualize_cube(cube=None,      # array name
         s = norm_multiply * np.ones_like(a = data_1dim)
         
     """
-    s radius 
+    s radius limit
     """
 
     # adding this for [-1,1] scaled input
@@ -135,7 +135,7 @@ def visualize_cube(cube=None,      # array name
 #         s = np.log(norm_multiply*data_1dim/np.linalg.norm(data_1dim))
 
     time_2 = timeit.default_timer()
-    print("Section 2 time = " + str((time_2 - time_1)/60))
+#     print("Section 2 time = " + str((time_2 - time_1)/60))
     # avg: 0.03 sec
 
     try:
@@ -156,9 +156,9 @@ def visualize_cube(cube=None,      # array name
         """
         cmap = plt.get_cmap(color_map)
         new_cmap = truncate_colormap(cmap, 
-                                     minval = 0, 
+                                     minval = 0.20, 
                                      maxval = 1,
-                                     n=100)
+                                     n=10)
 
         ## IGNORE BELOW 3D PLOT FORMATTING 
 
@@ -237,7 +237,7 @@ def visualize_cube(cube=None,      # array name
         ax.zaxis._axinfo['tick']['outward_factor'] = 0
         
         time_3 = timeit.default_timer()
-        print("Section 3 time = " + str((time_3 - time_2)/60))
+#         print("Section 3 time = " + str((time_3 - time_2)/60))
         # avg: 0.0005 sec
 
         ax.scatter(X, Y, Z,       ## axis vals
@@ -248,14 +248,14 @@ def visualize_cube(cube=None,      # array name
                    edgecolors="face")
         
         time_4 = timeit.default_timer()
-        print("Section 4 time = " + str((time_4 - time_3)/60))
+#         print("Section 4 time = " + str((time_4 - time_3)/60))
         # avg: 0.11 sec
     
         if plot_show:
             plt.show()
         
         time_5 = timeit.default_timer()
-        print("Section 5 time = " + str((time_5 - time_4)/60))
+#         print("Section 5 time = " + str((time_5 - time_4)/60))
         # avg:  sec
 
         if plot_save:
@@ -269,7 +269,9 @@ def visualize_cube(cube=None,      # array name
     
     
     
-def mmd_hist_plot(recon, real, epoch, file_name, plot_pdf ):
+def mmd_hist_plot(recon, real, epoch, file_name, 
+                  plot_pdf , log_plot, plot_show,
+                 redshift_fig_folder):
     """
     Args:
         recon(): generated data
@@ -279,6 +281,15 @@ def mmd_hist_plot(recon, real, epoch, file_name, plot_pdf ):
         hd (integer) : if 0 it's a histogram, if 1 it's a pdf
         
     """
+    if log_plot:
+        try:
+            recon = np.log(recon)
+            real = np.log(real)
+        except:
+            print("Couldnt take the log of the values...")
+            return
+    
+    
     plt.figure(figsize = (16,8))
     if plot_pdf == False:
         plt.title("Histograms of Hydrogen")
@@ -289,29 +300,42 @@ def mmd_hist_plot(recon, real, epoch, file_name, plot_pdf ):
     bins = np.linspace(min(recon.min(),real.min()),
                        max(recon.max(),real.max()), 
                        100)
-
-    plt.hist(real, bins = bins, 
+    real_title = "Real Sample Subcube - Only Nonzero"
+    recon_title = "Generator(Noise) Subcube - Only Nonzero"
+    if log_plot:
+        real_title = real_title + "  (Log)"
+        recon_title = recon_title + "  (Log)"
+                  
+    plt.hist(real, 
+             bins = bins, 
              color = "blue" ,
              alpha = 0.3, 
-             label = "Real Sample Subcube - Only Nonzero",
+             label = real_title,
              density = plot_pdf)
-    plt.hist(recon, bins = bins, 
+    plt.hist(recon, 
+             bins = bins, 
          color = "red" ,
          alpha= 0.5, 
-         label = "Generator(Noise) Subcube - Only Nonzero",
+         label = recon_title,
             density = plot_pdf)
 
     plt.legend()
-    plt.savefig(redshift_fig_folder + file_name + str(epoch) + '.png', 
+    if log_plot:
+        plt.savefig(redshift_fig_folder + file_name +"_log_"+ str(epoch) + '.png', 
+                    bbox_inches='tight')
+    else:
+        plt.savefig(redshift_fig_folder + file_name + str(epoch) + '.png', 
                 bbox_inches='tight')
-    plt.show() 
+    
+    if plot_show:
+        plt.show() 
     plt.close()
 
     return
 
 
 
-def mmd_D_loss_plot(fig_id, fig_title, data, save_direct ):
+def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_folder, t):
     """
     Args:
         fig_id(int): figure number
@@ -322,11 +346,37 @@ def mmd_D_loss_plot(fig_id, fig_title, data, save_direct ):
     plt.figure(fig_id, figsize = (10,5))
     plt.title(fig_title)
     plt.plot(data)
-    plt.savefig(dave_direct + fig_title +'_' + str(t) + '.png', 
-                bbox_inches='tight')
+    if save_plot:
+        plt.savefig(redshift_fig_folder + fig_title +'_' + str(t) + '.png', 
+                    bbox_inches='tight')
+    if show_plot:
+        plt.show()
     plt.close()
 
     
+def plot_minibatch_value_sum(sum_real,
+                             sum_real_recon,
+                             sum_noise_gen,
+                             sum_noise_gen_recon,
+                             save_plot,
+                             show_plot,
+                             redshift_fig_folder,
+                             t):
+                  
+    plt.figure(figsize = (12,6))
+    plt.title("Sum of Minibatches")
+    plt.plot(sum_real, label = "sum_real", alpha = 0.9)
+    plt.plot(sum_real_recon, label = "sum_real_recon", alpha = 0.3)
+    plt.plot(sum_noise_gen, label = "sum_noise_gen", alpha = 0.9)
+    plt.plot(sum_noise_gen_recon, label = "sum_noise_gen_recon", alpha = 0.3)
+    plt.legend()
+    if save_plot:
+        plt.savefig(redshift_fig_folder + 'sum_minibatch_' + str(t) + '.png', 
+                    bbox_inches='tight')
+    if show_plot:
+        plt.show() 
+    
+    plt.close()
     
     
     
