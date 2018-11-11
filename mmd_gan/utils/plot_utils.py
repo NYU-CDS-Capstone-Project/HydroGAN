@@ -156,7 +156,7 @@ def visualize_cube(cube=None,      # array name
         """
         cmap = plt.get_cmap(color_map)
         new_cmap = truncate_colormap(cmap, 
-                                     minval = 0.20, 
+                                     minval = 0.25, 
                                      maxval = 1,
                                      n=10)
 
@@ -269,7 +269,8 @@ def visualize_cube(cube=None,      # array name
     
     
     
-def mmd_hist_plot(recon, real, epoch, file_name, 
+def mmd_hist_plot(noise, real, recon_noise, recon_real,
+                  epoch, file_name, 
                   plot_pdf , log_plot, plot_show,
                  redshift_fig_folder):
     """
@@ -283,8 +284,10 @@ def mmd_hist_plot(recon, real, epoch, file_name,
     """
     if log_plot:
         try:
-            recon = np.log(recon)
+            noise = np.log(noise)
             real = np.log(real)
+            recon_noise = np.log(recon_noise)
+            recon_real = np.log(recon_real)
         except:
             print("Couldnt take the log of the values...")
             return
@@ -295,28 +298,48 @@ def mmd_hist_plot(recon, real, epoch, file_name,
         plt.title("Histograms of Hydrogen")
     else:
         plt.title("PDFs of Hydrogen")
-    plt.xlim(min(recon.min(),real.min()),
-            max(recon.max(),real.max()))
-    bins = np.linspace(min(recon.min(),real.min()),
-                       max(recon.max(),real.max()), 
-                       100)
-    real_title = "Real Sample Subcube - Only Nonzero"
-    recon_title = "Generator(Noise) Subcube - Only Nonzero"
+        
+    plot_min = min(noise.min(),real.min(),recon_noise.min(),recon_real.min())
+    plot_max = max(noise.max(),real.max(),recon_noise.max(),recon_real.max())
+#     print("plot_min = " + str(plot_min))
+#     print("plot_max = " + str(plot_max))
+    plt.xlim(plot_min,plot_max)
+    
+    bins = np.linspace(plot_min,plot_max,100)
+    
+    real_label = "Real Subcube - Only Nonzero"
+    noise_label = "Noise Subcube - Only Nonzero"
+    recon_noise_label = "Reconstructed Noise Subcube - Only Nonzero"
+    recon_real_label = "Reconstructed Real Subcube - Only Nonzero"
     if log_plot:
-        real_title = real_title + "  (Log)"
-        recon_title = recon_title + "  (Log)"
+        real_label = real_label + "  (Log)"
+        noise_label = noise_label + "  (Log)"
+        recon_noise_label = recon_noise_label + "  (Log)"
+        recon_real_label = recon_real_label + "  (Log)"
                   
     plt.hist(real, 
              bins = bins, 
              color = "blue" ,
-             alpha = 0.3, 
-             label = real_title,
+             alpha = 0.8, 
+             label = real_label,
              density = plot_pdf)
-    plt.hist(recon, 
+    plt.hist(noise, 
              bins = bins, 
          color = "red" ,
-         alpha= 0.5, 
-         label = recon_title,
+         alpha= 0.8, 
+         label = noise_label,
+            density = plot_pdf)
+    plt.hist(recon_noise, 
+             bins = bins, 
+         color = "lightblue" ,
+         alpha= 0.2, 
+         label = recon_noise_label,
+            density = plot_pdf)
+    plt.hist(recon_real, 
+             bins = bins, 
+         color = "orange" ,
+         alpha= 0.2, 
+         label = recon_real_label,
             density = plot_pdf)
 
     plt.legend()

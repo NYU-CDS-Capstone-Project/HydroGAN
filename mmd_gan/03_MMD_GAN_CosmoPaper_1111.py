@@ -73,7 +73,7 @@ from pathlib import Path
 # In[4]:
 
 
-batch_size = 32       # BATCH_SIZE: batch size for training
+batch_size = 16       # BATCH_SIZE: batch size for training
 gpu_device = 0        # GPU_DEVICE: gpu id (default 0)
 nc = 1                # NC: number of channels in images
 nz = 256                # NZ: number of channels, hidden dimension in z and codespace
@@ -287,7 +287,7 @@ print("minimum variance estimated = " + str(min_var_est))
 
 # ## Redshift Data Load
 
-# In[19]:
+# In[ ]:
 
 
 f = h5py.File(data_dir + redshift_file, 'r')
@@ -297,7 +297,7 @@ f = f['delta_HI']
 
 # ## Redshift Info Load
 
-# In[20]:
+# In[ ]:
 
 
 # create trial folder if it doesn't exist
@@ -305,7 +305,7 @@ if Path(experiment).exists() == False:
     os.mkdir(experiment)
 
 
-# In[21]:
+# In[ ]:
 
 
 # create redshift info folder if it doesn't exist
@@ -313,7 +313,7 @@ if Path(redshift_info_folder).exists() == False:
     os.mkdir(redshift_info_folder)
 
 
-# In[22]:
+# In[ ]:
 
 
 if run_in_jupyter:
@@ -322,7 +322,7 @@ else:
     from utils.data_utils import *
 
 
-# In[23]:
+# In[ ]:
 
 
 # check if redshift info (min & max exists) as pickle
@@ -363,7 +363,7 @@ if not min_cube_file.exists() or not max_cube_file.exists() or not mean_cube_fil
     
 
 
-# In[24]:
+# In[ ]:
 
 
 # check if redshift info (min & max exists) as pickle
@@ -404,7 +404,7 @@ if not min_raw_cube_file.exists() or not max_raw_cube_file.exists() or not mean_
     
 
 
-# In[25]:
+# In[ ]:
 
 
 min_cube = np.load(file = redshift_info_folder + redshift_file + "_min_cube" + '.npy')
@@ -417,7 +417,7 @@ print("Mean of data = " + str(mean_cube))
 print("Stddev of data = " + str(stddev_cube))
 
 
-# In[26]:
+# In[ ]:
 
 
 min_raw_cube = np.load(file = redshift_info_folder + redshift_raw_file + "_min_cube" + '.npy')
@@ -432,7 +432,7 @@ print("Stddev of raw data = " + str(stddev_raw_cube))
 
 # ## Figures Handling
 
-# In[27]:
+# In[ ]:
 
 
 # create figures folder if it doesn't exist
@@ -444,7 +444,7 @@ if Path(redshift_3dfig_folder).exists() == False:
 
 # ## 3D Plot
 
-# In[28]:
+# In[ ]:
 
 
 if run_in_jupyter:
@@ -453,7 +453,7 @@ else:
     from utils.data_utils import *
 
 
-# In[29]:
+# In[ ]:
 
 
 if run_in_jupyter:
@@ -464,7 +464,7 @@ else:
 
 # ## Data Loader
 
-# In[30]:
+# In[ ]:
 
 
 if run_in_jupyter:
@@ -473,7 +473,7 @@ else:
     from dataset import *
 
 
-# In[31]:
+# In[ ]:
 
 
 if run_in_jupyter:
@@ -484,7 +484,7 @@ else:
 
 # ## Checking Duplicates in Sampled Subcubes
 
-# In[32]:
+# In[ ]:
 
 
 s_sample = edge_sample 
@@ -524,7 +524,7 @@ sample_df.shape[0] == dropped_sample_df.shape[0]
 
 # ## Dataset & DataLoader
 
-# In[33]:
+# In[ ]:
 
 
 # on prince
@@ -545,7 +545,7 @@ sampled_subcubes = HydrogenDataset(h5_file=redshift_file,
                                   stddev_raw_cube = stddev_raw_cube)
 
 
-# In[34]:
+# In[ ]:
 
 
 # Get data
@@ -555,25 +555,19 @@ trn_loader = torch.utils.data.DataLoader(sampled_subcubes,
                                          num_workers=int(workers))
 
 
-# In[35]:
-
-
-inverse_transform
-
-
 # ## Checking 3D Plots
 
-# In[36]:
+# In[ ]:
 
 
 test_3d_plot(edge_test = edge_test, 
              edge_sample = edge_sample,
-            f = f, 
+             f = f, 
              scatter_size_magnitude = scatter_size_magnitude,
-            viz_multiplier = viz_multiplier,
-            plot_save_3d = plot_save_3d,
-            inverse_transform = inverse_transform,
-            sampled_subcubes = sampled_subcubes)
+             viz_multiplier = viz_multiplier,
+             plot_save_3d = plot_save_3d,
+             inverse_transform = inverse_transform,
+             sampled_subcubes = sampled_subcubes)
 
 
 # ## Model
@@ -1013,8 +1007,8 @@ for t in range(max_iter):
             
             # Plotting Discriminator Plots
             if j % 5 == 0 and plotted < 1:
-#                 if True:
-                try:
+                if True:
+#                 try:
                     """
                     Plotting Different Discriminator Related Values
                     """
@@ -1045,23 +1039,45 @@ for t in range(max_iter):
                              redshift_fig_folder = redshift_fig_folder,
                              t = t)
 
+                    
                     """
                     Plotting Nominal and Log Histograms
                     """
                     # plot output of the discriminator with real data input
                     # and output of the discriminator with noise input
                     # on the same histogram 
+                    # selecting a random cube from the batch
                     random_batch = random.randint(0,batch_size-1)
-                    recon_plot = y[random_batch].cpu().view(-1,1).detach().numpy()
-                    real_plot = x[random_batch].cpu().view(-1,1).detach().numpy()
-                    print("min(x[random_batch]) = " + str(min(real_plot)))
-                    print("max(x[random_batch]) = " + str(max(real_plot)))
-                    print("min(y[random_batch]) = " + str(min(recon_plot)))
-                    print("max(y[random_batch]) = " + str(max(recon_plot)))
+                    real_ae_cube = f_dec_X_D[random_batch].cpu().view(128,128,128).detach().numpy()
+                    noise_ae_cube = f_dec_Y_D[random_batch].cpu().view(128,128,128).detach().numpy()
+                    noise_gen_cube = y[random_batch][0].cpu().detach().numpy()
+                    real_cube = x[random_batch][0].cpu().detach().numpy()
+                                        
+                    # inverse transform the real and generated cubes back to normal
+                    real_ae_cube = inverse_transform_func(cube = real_ae_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                    noise_ae_cube = inverse_transform_func(cube = noise_ae_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                    noise_gen_cube = inverse_transform_func(cube = noise_gen_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+                    real_cube = inverse_transform_func(cube = real_cube,
+                                                  inverse_type = inverse_transform, 
+                                             sampled_dataset = sampled_subcubes)
+
+                    print("real_ae_cube max = " + str(real_ae_cube.max()) + ", min = " + str(real_ae_cube.min())                      + ", mean = " + str(real_ae_cube.mean()))
+                    print("noise_ae_cube max = " + str(noise_ae_cube.max()) + ", min = " + str(noise_ae_cube.min())                         + ", mean = " + str(noise_ae_cube.mean()))
+                    print("noise_gen_cube max = " + str(noise_gen_cube.max()) + ", min = " + str(noise_gen_cube.min())                         + ", mean = " + str(noise_gen_cube.mean()))
+                    print("real_cube max = " + str(real_cube.max()) + ", min = " + str(real_cube.min())                         + ", mean = " + str(real_cube.mean()))
                     
-                    recon_plot = recon_plot[np.nonzero(recon_plot)]
+                    real_ae_cube = real_ae_cube[np.nonzero(real_ae_cube)]
+                    noise_ae_cube = noise_ae_cube[np.nonzero(noise_ae_cube)]
+                    noise_gen_cube = noise_gen_cube[np.nonzero(noise_gen_cube)]
+                    real_cube = real_cube[np.nonzero(real_cube)]
     #                 recon_plot = recon_plot[np.greater(recon_plot, 0)]
-                    real_plot = real_plot[np.nonzero(real_plot)]
+                    
     #                 print("max(x[0] - nonzero) = " + str(max(real_plot)))
     #                 print("max(y[0] - nonzero) = " + str(max(recon_plot)))
     #                 print("min(x[0] - nonzero) = " + str(min(real_plot)))
@@ -1069,20 +1085,21 @@ for t in range(max_iter):
     #                 recon_plot = recon_plot + 1
     #                 real_plot = real_plot + 1
 
-
-                    print("len(real_plot) - nonzero elements = " + str(len(real_plot)))
-                    print("len(recon_plot) - nonzero elements = " + str(len(recon_plot)))
+#                     print("len(real_plot) - nonzero elements = " + str(len(real_plot)))
+#                     print("len(recon_plot) - nonzero elements = " + str(len(recon_plot)))
     #                 log_nonzero_real_list.append(len(real_plot))
     #                 log_nonzero_recon_list.append(len(recon_plot))
 
-                    log_nonzero_recon_over_real_list.append(len(recon_plot) / len(real_plot))
-                    print("max(real_plot) = " + str(max(real_plot)))
-                    print("max(recon_plot) = " + str(max(recon_plot)))
-                    print("min(real_plot) = " + str(min(real_plot)))
-                    print("min(recon_plot) = " + str(min(recon_plot)))
+#                     log_nonzero_recon_over_real_list.append(len(recon_plot) / len(real_plot))
+#                     print("max(real_plot) = " + str(max(real_plot)))
+#                     print("max(recon_plot) = " + str(max(recon_plot)))
+#                     print("min(real_plot) = " + str(min(real_plot)))
+#                     print("min(recon_plot) = " + str(min(recon_plot)))
                     
-                    mmd_hist_plot(recon = recon_plot, 
-                                  real = real_plot, 
+                    mmd_hist_plot(noise = noise_gen_cube, 
+                                  real = real_cube, 
+                                  recon_noise = noise_ae_cube, 
+                                  recon_real = real_ae_cube,
                                   epoch = t, 
                                   file_name = 'hist_' + str(t) + '.png', 
                                   plot_pdf = False,
@@ -1090,8 +1107,10 @@ for t in range(max_iter):
                                   plot_show = True,
                                   redshift_fig_folder = redshift_fig_folder)
     
-                    mmd_hist_plot(recon = recon_plot, 
-                                  real = real_plot, 
+                    mmd_hist_plot(noise = noise_gen_cube, 
+                                  real = real_cube, 
+                                  recon_noise = noise_ae_cube, 
+                                  recon_real = real_ae_cube,
                                   epoch = t, 
                                   file_name = 'pdf_' + str(t) + '.png', 
                                   plot_pdf = True,
@@ -1102,8 +1121,10 @@ for t in range(max_iter):
                     """
                     Plotting the log histograms & PDF
                     """
-                    mmd_hist_plot(recon = recon_plot, 
-                                  real = real_plot, 
+                    mmd_hist_plot(noise = noise_gen_cube, 
+                                  real = real_cube, 
+                                  recon_noise = noise_ae_cube, 
+                                  recon_real = real_ae_cube,
                                   epoch = t, 
                                   file_name = 'hist_log_' + str(t) + '.png', 
                                   plot_pdf = False,
@@ -1111,8 +1132,10 @@ for t in range(max_iter):
                                   plot_show = True,
                                   redshift_fig_folder = redshift_fig_folder)
     
-                    mmd_hist_plot(recon = recon_plot, 
-                                  real = real_plot, 
+                    mmd_hist_plot(noise = noise_gen_cube, 
+                                  real = real_cube, 
+                                  recon_noise = noise_ae_cube, 
+                                  recon_real = real_ae_cube,
                                   epoch = t, 
                                   file_name = 'pdf_log_' + str(t) + '.png', 
                                   plot_pdf = True,
@@ -1120,36 +1143,16 @@ for t in range(max_iter):
                                   plot_show = True,
                                   redshift_fig_folder = redshift_fig_folder)                     
 
-                except:
-                    pass
+#                 except:
+#                     pass
                 
                 plotted = plotted + 1
                 
                 
                 
-            if plotted_2 < 1 and t % 10 == 0 and t > 0:
-                
-                # selecting a random cube from the batch
-                random_batch = random.randint(0,batch_size-1)
-                real_ae_cube = f_dec_X_D[random_batch].cpu().view(128,128,128).detach().numpy()
-                noise_ae_cube = f_dec_Y_D[random_batch].cpu().view(128,128,128).detach().numpy()
-                noise_gen_cube = y[random_batch][0].cpu().detach().numpy()
-                real_cube = x[random_batch][0].cpu().detach().numpy()
-                
-                # transforming the inputs for visualization
-                # to [0,1] interval for better plotting
-                # using the whole cube's min and max!!!
-                # not the subcube's!!!
-                real_ae_cube = (real_ae_cube - sampled_subcubes.min_val) / sampled_subcubes.max_val
-                noise_ae_cube = (noise_ae_cube - sampled_subcubes.min_val) / sampled_subcubes.max_val
-                noise_gen_cube = (noise_gen_cube - sampled_subcubes.min_val) / sampled_subcubes.max_val
-                real_cube = (real_cube - sampled_subcubes.min_val) / sampled_subcubes.max_val
-                
-                print("real_ae_cube max = " + str(real_ae_cube.max()) + ", min = " + str(real_ae_cube.min()))
-                print("noise_ae_cube max = " + str(noise_ae_cube.max()) + ", min = " + str(noise_ae_cube.min()))
-                print("noise_gen_cube max = " + str(noise_gen_cube.max()) + ", min = " + str(noise_gen_cube.min()))
-                print("real_cube max = " + str(real_cube.max()) + ", min = " + str(real_cube.min()))
-
+            if plotted_2 < 1 and t % 5 == 0 and t > 25:
+ 
+                # Plot the 3D Cubes
                 print("\nReconstructed, AutoEncoder Generated Real Cube")
 #                 recon_real_viz = 
                 visualize_cube(cube=real_ae_cube,      ## array name
