@@ -5,7 +5,7 @@
 # 
 # To check GPU usage, open new terminal inside Jupyter and nvidia-smi
 
-# To run with sbatch, 
+# #### To run with sbatch, 
 # * change the jupyter notebook parameters
 #     * batch_size
 #     * nz (= output channels in the embedding)
@@ -22,6 +22,10 @@
 #     * 
 # * change the file name inside the run-mmdgan-110919.sbatch file
 # * do: sbatch run-mmdgan-110918.sbatch
+
+# #### To transfer files to google drive
+# * module load rclone/1.38
+# * rclone copy /scratch/jjz289/data/mmd_gan_code/drive_output/ remote1:capstone_cosmo_DATE_X
 
 # In[1]:
 
@@ -101,7 +105,8 @@ max_iter = 150         # MAX_ITER: max iteration for training
 optimizer_choice = "rmsprop"     # adam or rmsprop
 dist_ae = 'L2'                  # "L2" or "L1" or "cos" -> Autoencoder reconstructruced cube loss choice
 manual_seed = 1126
-n_samples = batch_size * 128      # on prince, number of samples to get from the training cube
+sample_size_multiplier = 128
+n_samples = batch_size * sample_size_multiplier      # on prince, number of samples to get from the training cube
 Diter_1 = 100    # default: 100
 Giter_1 = 1      # default: 1
 Diter_2 = 5      # default: 5
@@ -120,6 +125,15 @@ assert n_samples / batch_size > 100, "The gen_iterations wont work properly!"
 # In[6]:
 
 
+if run_in_jupyter:
+    get_ipython().run_line_magic('run', 'utils/power_spectrum_utils.py')
+else:
+    from utils.power_spectrum_utils import *
+
+
+# In[7]:
+
+
 """
 for p in netD.encoder.parameters():
     p.data.clamp_(left_clamp, right_clamp)
@@ -130,7 +144,7 @@ right_clamp = 0.01     # default: 0.01
 
 # ### Plotting Options
 
-# In[7]:
+# In[8]:
 
 
 viz_multiplier = 1e0           # the norm multiplier in the 3D visualization
@@ -141,12 +155,15 @@ scatter_size_magnitude = False  # change scatter point radius based on the value
 
 # ### Saving Options
 
-# In[8]:
+# In[9]:
 
 
 root_dir = "./"  # this goes to 
 data_dir = "../"
-experiment = root_dir + "drive_output/"       # : output directory of saved models
+if run_in_jupyter:
+    experiment = root_dir + "drive_output/"       # : output directory of saved models
+else:
+    experiment = root_dir + "mmd-jupyter/"
 model_save_folder = experiment + "model/"
 redshift_fig_folder = experiment + "figures/"        # folder to save mmd & related plots
 redshift_3dfig_folder = experiment + "/3d_figures/"   # folder to save 3D plots
@@ -157,7 +174,7 @@ save_model_every = 10               # (every x epoch) frequency to save the mode
 
 # ### Dataset Options
 
-# In[9]:
+# In[10]:
 
 
 workers = 2          # WORKERS: number of threads to load data
@@ -172,7 +189,7 @@ inverse_transform = "minmaxneg11"    # minmax11 / minmaxneg11 / std_noshift / st
 
 # ### Testing Options
 
-# In[10]:
+# In[11]:
 
 
 in_testing = False              # True if doing testing
@@ -180,7 +197,7 @@ in_testing = False              # True if doing testing
 
 # ### Debug Utils
 
-# In[11]:
+# In[12]:
 
 
 if run_in_jupyter:
@@ -189,13 +206,13 @@ else:
     from utils.debug_utils import log
 
 
-# In[12]:
+# In[13]:
 
 
 DEBUG = False
 
 
-# In[13]:
+# In[14]:
 
 
 print("log('asdas') output = " + str(log("asdas")))
@@ -205,7 +222,7 @@ print("log('asdas') output = " + str(log("asdas")))
 
 # ## Training Parameters
 
-# In[14]:
+# In[15]:
 
 
 print("Batch Size = " + str(batch_size))
@@ -227,10 +244,10 @@ print("Diter_2 = " + str(Diter_2))
 print("Giter_2 = " + str(Giter_2))
 
 
-# In[15]:
+# In[16]:
 
 
-edge_sample = 128
+edge_sample = cube_size
 edge_test = 1024
 
 print("one edge of the test partition of the whole cube = " + str(edge_test))
@@ -239,7 +256,7 @@ print("one edge of the sampled subcubes =  " + str(edge_sample))
 
 # ### MMD Parameters
 
-# In[16]:
+# In[17]:
 
 
 """
@@ -266,7 +283,7 @@ print("lambda_AE_Y = " + str(lambda_AE_Y))
 print("lambda_rg = " + str(lambda_rg))
 
 
-# In[17]:
+# In[18]:
 
 
 """
@@ -278,7 +295,7 @@ sigma_list = [sigma / base for sigma in sigma_list]
 print("sigma_list = " + str(sigma_list))
 
 
-# In[18]:
+# In[ ]:
 
 
 """
@@ -362,9 +379,9 @@ if not min_cube_file.exists() or not max_cube_file.exists() or not mean_cube_fil
     max_cube = get_max_cube(f=f)
     print(max_cube)
     mean_cube = get_mean_cube(f=f)
-    print(min_cube)
+    print(mean_cube)
     stddev_cube = get_stddev_cube(f=f, mean_cube=mean_cube)
-    print(max_cube)
+    print(stddev_cube)
     
     np.save(file = redshift_info_folder + redshift_file + "_min_cube",
         arr = min_cube,
@@ -578,14 +595,16 @@ trn_loader = torch.utils.data.DataLoader(sampled_subcubes,
 # In[ ]:
 
 
-test_3d_plot(edge_test = edge_test, 
-             edge_sample = edge_sample,
-             f = f, 
-             scatter_size_magnitude = scatter_size_magnitude,
-             viz_multiplier = viz_multiplier,
-             plot_save_3d = plot_save_3d,
-             inverse_transform = inverse_transform,
-             sampled_subcubes = sampled_subcubes)
+# dont run this in batch
+if run_in_jupyter:
+    test_3d_plot(edge_test = edge_test, 
+                 edge_sample = edge_sample,
+                 f = f, 
+                 scatter_size_magnitude = scatter_size_magnitude,
+                 viz_multiplier = viz_multiplier,
+                 plot_save_3d = plot_save_3d,
+                 inverse_transform = inverse_transform,
+                 sampled_subcubes = sampled_subcubes)
 
 
 # ## Model
@@ -923,8 +942,8 @@ for t in range(max_iter):
             This one just acts like an autoencoder
             """
             f_enc_X_D, f_dec_X_D = netD(x)
-            sum_real.append(x.sum())
-            sum_real_recon.append(f_dec_X_D.sum())
+#             sum_real.append(x.sum())
+#             sum_real_recon.append(f_dec_X_D.sum())
 #             print("netD(x) outputs:")
 #             print("f_enc_X_D size = " + str(f_enc_X_D.size()))
 #             print("f_dec_X_D size = " + str(f_dec_X_D.size()))
@@ -946,7 +965,7 @@ for t in range(max_iter):
             # output of the generator with noise input
 #             y = Variable(netG(noise).data)
             y = Variable(netG(noise))
-            sum_noise_gen.append(y.sum())
+#             sum_noise_gen.append(y.sum())
 #             print("y shape = " + str(y.shape))
 #             print("y[0] shape = " + str(y[0].shape))
 #             print("y[0][0] shape = " + str(y[0][0].shape))
@@ -956,7 +975,7 @@ for t in range(max_iter):
             # output of the discriminator with noise input
             # this tests discriminator 
             f_enc_Y_D, f_dec_Y_D = netD(y)
-            sum_noise_gen_recon.append(f_dec_Y_D.sum())
+#             sum_noise_gen_recon.append(f_dec_Y_D.sum())
 #             print("netD(y) outputs:")
 #             print("f_enc_Y_D size = " + str(f_enc_Y_D.size()))
 #             print("f_dec_Y_D size = " + str(f_dec_Y_D.size()))
@@ -1024,7 +1043,7 @@ for t in range(max_iter):
 
             
             # Plotting Discriminator Plots
-            if j % 5 == 0 and plotted < 1:
+            if j % 2 == 0 and plotted < 1:
                 if True:
 #                 try:
                     """
@@ -1084,11 +1103,34 @@ for t in range(max_iter):
                     real_cube = inverse_transform_func(cube = real_cube,
                                                   inverse_type = inverse_transform, 
                                              sampled_dataset = sampled_subcubes)
-
+                    
+                    # using the inverse-transformed randomly selected samples
+                    sum_real.append(real_cube.sum())
+                    sum_real_recon.append(real_ae_cube.sum())
+                    sum_noise_gen.append(noise_gen_cube.sum())
+                    sum_noise_gen_recon.append(noise_ae_cube.sum())
+                    
                     print("real_ae_cube max = " + str(real_ae_cube.max()) + ", min = " + str(real_ae_cube.min())                      + ", mean = " + str(real_ae_cube.mean()))
                     print("noise_ae_cube max = " + str(noise_ae_cube.max()) + ", min = " + str(noise_ae_cube.min())                         + ", mean = " + str(noise_ae_cube.mean()))
                     print("noise_gen_cube max = " + str(noise_gen_cube.max()) + ", min = " + str(noise_gen_cube.min())                         + ", mean = " + str(noise_gen_cube.mean()))
                     print("real_cube max = " + str(real_cube.max()) + ", min = " + str(real_cube.min())                         + ", mean = " + str(real_cube.mean()))
+                    
+                    
+                    """
+                    Power Spectrum Comparisons
+                    """
+                    plot_power_spec(real_cube = real_cube,        # should be inverse_transformed
+                                    generated_cube = noise_gen_cube,   # should be inverse_transformed
+                                    raw_cube_mean = sampled_subcubes.mean_val, 
+                                    save_plot = True,
+                                    show_plot = True,
+                                     redshift_fig_folder = redshift_fig_folder,
+                                     t = t,
+                                    threads=1, 
+                                    MAS="CIC", 
+                                    axis=0, 
+                                    BoxSize=75.0/2048*128)
+                    
                     
                     real_ae_cube = real_ae_cube[np.nonzero(real_ae_cube)]
                     noise_ae_cube = noise_ae_cube[np.nonzero(noise_ae_cube)]
@@ -1157,7 +1199,7 @@ for t in range(max_iter):
                 
                 
                 
-            if plotted_2 < 1 and t % 10 == 0 and t >= 0:
+            if plotted_2 < 1 and t % 5 == 0 and t > gen_iterations_limit:
  
                 # reshaping DOESNT WORK due to nonzero() -> reshaping 1D to 3D with cube_size edges
                 # so just getting them again works.
@@ -1183,6 +1225,7 @@ for t in range(max_iter):
                 print("noise_ae_cube shape = " + str(noise_ae_cube.shape))
                 print("noise_gen_cube shape = " + str(noise_gen_cube.shape))
                 print("real_cube shape = " + str(real_cube.shape))
+            
             
 #                 # Plot the 3D Cubes
                 print("\nReconstructed, AutoEncoder Generated Real Cube")
@@ -1397,7 +1440,7 @@ for t in range(max_iter):
 
 
 if in_testing == False:
-    assert(in_testing, "Stopping here, because not in testing...")
+    assert in_testing, "Stopping here, because not in testing..."
 
 
 # ## Load Optimized Model

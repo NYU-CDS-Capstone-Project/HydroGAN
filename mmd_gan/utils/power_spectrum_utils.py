@@ -20,12 +20,12 @@ def power_spectrum_np(cube, mean_raw_cube):
     """
     taken from: https://astronomy.stackexchange.com/questions/26431/tests-for-code-that-computes-two-point-correlation-function-of-galaxies
     
-    cube = should be in shape [. x . x . ]
+    cube = should be in shape [. x . x. x . x . ]
     mean_raw_cube = is the mean of the whole cube of that redshift
     """
 
-
-    nc = cube.shape[0]                # define how many cells your box has
+    print(cube.shape)
+    nc = cube.shape[2]                # define how many cells your box has
     boxlen = 50.0           # define length of box
     Lambda = boxlen/4.0     # define an arbitrary wave length of a plane wave
     dx = boxlen/nc          # get size of a cell
@@ -86,6 +86,10 @@ def power_spectrum_np(cube, mean_raw_cube):
 def plot_power_spec(real_cube,        # should be inverse_transformed
                     generated_cube,   # should be inverse_transformed
                     raw_cube_mean,    # mean of the whole raw data cube (fields=z0.0)
+                    save_plot,
+                     show_plot,
+                     redshift_fig_folder,
+                     t,
                     threads=1, 
                     MAS="CIC", 
                     axis=0, 
@@ -99,7 +103,12 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
     - Power spectrum plots of both cubes
     in the same figure.
     """
+    real_cube = real_cube.reshape(1,1,real_cube.shape[0],real_cube.shape[0],real_cube.shape[0])
+    generated_cube = generated_cube.reshape(1,1,generated_cube.shape[0],generated_cube.shape[0],generated_cube.shape[0])
+    
     print("number of samples of real and generated cubes = " + str(real_cube.shape[0]))
+    
+    
     
     
 #     ## Assert same type
@@ -139,7 +148,7 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
         delta_gen_cube = generated_cube[cube_no][0]
         
         Pk_real, dk_real, k_real = power_spectrum_np(cube = delta_real_cube, 
-                                                     mean_raw_cube =raw_cube_mean)
+                                                     mean_raw_cube = raw_cube_mean)
         Pk_gen, dk_gen, k_gen = power_spectrum_np(cube = delta_gen_cube, 
                                                   mean_raw_cube = raw_cube_mean)
         
@@ -175,12 +184,17 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
                  alpha = 0.2,
                  label="Generated from Noise")
         plt.rcParams["font.size"] = 12
-        plt.title("Power Spectrum Comparison")
+        plt.title("Power Spectrum Comparison - (Red: Real, Blue: Noise-Generated)")
         plt.xlabel('k')
-        plt.ylabel('log(Pk.k3D)')
+        plt.ylabel('log10(Pk.k3D)')
 #         plt.legend()
     
-    plt.show()
+    if save_plot:
+        plt.savefig(redshift_fig_folder + 'powerspectrum_' + str(t) + '.png', 
+                    bbox_inches='tight')
+    if show_plot:
+        plt.show() 
+    plt.close()
     
     
     return 
