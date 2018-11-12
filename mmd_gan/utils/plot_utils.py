@@ -150,7 +150,7 @@ def visualize_cube(cube=None,      # array name
         """
         cmap = plt.get_cmap(color_map)
         new_cmap = truncate_colormap(cmap, 
-                                     minval = 0.25, 
+                                     minval = 0.5, 
                                      maxval = 1,
                                      n=10)
 
@@ -278,10 +278,10 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
     """
     if log_plot:
         try:
-            noise = np.log(noise)
-            real = np.log(real)
-            recon_noise = np.log(recon_noise)
-            recon_real = np.log(recon_real)
+            noise = np.log10(noise)
+            real = np.log10(real)
+            recon_noise = np.log10(recon_noise)
+            recon_real = np.log10(recon_real)
         except:
             print("Couldnt take the log of the values...")
             return
@@ -299,49 +299,54 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
 #     print("plot_max = " + str(plot_max))
     plt.xlim(plot_min,plot_max)
     
-    bins = np.linspace(plot_min,plot_max,100)
+    bins = np.linspace(plot_min,plot_max,300)
     
     real_label = "Real Subcube - Only Nonzero"
     noise_label = "Noise Subcube - Only Nonzero"
     recon_noise_label = "Reconstructed Noise Subcube - Only Nonzero"
     recon_real_label = "Reconstructed Real Subcube - Only Nonzero"
     if log_plot:
-        real_label = real_label + "  (Log)"
-        noise_label = noise_label + "  (Log)"
-        recon_noise_label = recon_noise_label + "  (Log)"
-        recon_real_label = recon_real_label + "  (Log)"
+        real_label = real_label + "  (Log10)"
+        noise_label = noise_label + "  (Log10)"
+        recon_noise_label = recon_noise_label + "  (Log10)"
+        recon_real_label = recon_real_label + "  (Log10)"
                   
     plt.hist(real, 
              bins = bins, 
              color = "blue" ,
+             log = log_plot,
              alpha = 0.8, 
              label = real_label,
              density = plot_pdf)
+    plt.hist(recon_real, 
+             bins = bins, 
+         color = "lightblue" ,
+             log = log_plot,
+         alpha= 0.4, 
+         label = recon_real_label,
+            density = plot_pdf)
     plt.hist(noise, 
              bins = bins, 
          color = "red" ,
+             log = log_plot,
          alpha= 0.8, 
          label = noise_label,
             density = plot_pdf)
     plt.hist(recon_noise, 
              bins = bins, 
-         color = "lightblue" ,
+         color = "orange" ,
+             log = log_plot,
          alpha= 0.4, 
          label = recon_noise_label,
             density = plot_pdf)
-    plt.hist(recon_real, 
-             bins = bins, 
-         color = "orange" ,
-         alpha= 0.4, 
-         label = recon_real_label,
-            density = plot_pdf)
+
 
     plt.legend()
     if log_plot:
-        plt.savefig(redshift_fig_folder + file_name +"_log_"+ str(epoch) + '.png', 
+        plt.savefig(redshift_fig_folder + file_name , 
                     bbox_inches='tight')
     else:
-        plt.savefig(redshift_fig_folder + file_name + str(epoch) + '.png', 
+        plt.savefig(redshift_fig_folder + file_name, 
                 bbox_inches='tight')
     
     if plot_show:
@@ -371,7 +376,7 @@ def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_f
     plt.close()
 
     
-def plot_minibatch_value_sum(sum_real,
+def plot_minibatch_value_sum(sum_real,       
                              sum_real_recon,
                              sum_noise_gen,
                              sum_noise_gen_recon,
@@ -379,9 +384,12 @@ def plot_minibatch_value_sum(sum_real,
                              show_plot,
                              redshift_fig_folder,
                              t):
-                  
+    """
+    All the input the data should be inverse transformed to make it comparable with
+    other transformation types.
+    """              
     plt.figure(figsize = (12,6))
-    plt.title("Sum of Minibatches")
+    plt.title("Sum of Minibatches (inverse transformed)")
     plt.plot(sum_real, label = "sum_real", alpha = 0.9)
     plt.plot(sum_real_recon, label = "sum_real_recon", alpha = 0.3)
     plt.plot(sum_noise_gen, label = "sum_noise_gen", alpha = 0.9)

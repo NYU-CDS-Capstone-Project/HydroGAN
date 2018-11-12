@@ -12,7 +12,7 @@ class Encoder(nn.Module):
       
         # First Convolutional Layer
         self.conv1_in_channels = 1
-        self.conv1_out_channels = 2
+        self.conv1_out_channels = 4
         self.conv1_kernel = 3
         self.conv1_stride = 1
         self.conv1_padding = 0
@@ -30,20 +30,26 @@ class Encoder(nn.Module):
         self.bn1_encode = nn.BatchNorm3d(num_features = self.conv1_out_channels)
         self.leakyrelu1 = nn.LeakyReLU(leakyrelu_const, inplace=True)
 
-        # First Average Pooling
+        # First Pooling
         self.pool1_kernel = 2
         self.pool1_stride = 2 
         pool1_output_dim = calculate_pool_output_dim(D=conv1_output_dim,
                                                     K=self.pool1_kernel,
                                                     S=self.pool1_stride)
         print("Pool1 Output Dimension = " + str(pool1_output_dim)) 
-        self.pool1_encode = nn.MaxPool3d(kernel_size=self.pool1_kernel, 
-                                            stride=self.pool1_stride,
-                                            return_indices = self.pool_return_indices)
+#         self.pool1_encode = nn.MaxPool3d(kernel_size=self.pool1_kernel, 
+#                                             stride=self.pool1_stride,
+#                                             return_indices = self.pool_return_indices)
+        self.pool1_encode = nn.AvgPool3d(kernel_size=self.pool1_kernel, 
+                                         stride=self.pool1_stride, 
+                                         padding=0, 
+                                         ceil_mode=False, 
+                                         count_include_pad=True)
+        
 
         # Second Convolutional Layer
         self.conv2_in_channels = self.conv1_out_channels
-        self.conv2_out_channels = 12
+        self.conv2_out_channels = 24
         self.conv2_kernel = 4
         self.conv2_stride = 1
         self.conv2_padding = 0
@@ -61,20 +67,25 @@ class Encoder(nn.Module):
         self.bn2_encode = nn.BatchNorm3d(num_features = self.conv2_out_channels)
         self.leakyrelu2 = nn.LeakyReLU(leakyrelu_const, inplace=True)
 
-        # Second Average Pooling
+        # Second Pooling
         self.pool2_kernel = 2
         self.pool2_stride = 2 
         pool2_output_dim = calculate_pool_output_dim(D=conv2_output_dim,
                                                 K=self.pool2_kernel,
                                                 S=self.pool2_stride)
         print("Pool2 Output Dimension = " + str(pool2_output_dim)) 
-        self.pool2_encode = nn.MaxPool3d(kernel_size=self.pool2_kernel, 
-                                            stride=self.pool2_stride,
-                                            return_indices = self.pool_return_indices)   
+#         self.pool2_encode = nn.MaxPool3d(kernel_size=self.pool2_kernel, 
+#                                             stride=self.pool2_stride,
+#                                             return_indices = self.pool_return_indices)   
+        self.pool2_encode = nn.AvgPool3d(kernel_size=self.pool2_kernel, 
+                                         stride=self.pool2_stride, 
+                                         padding=0, 
+                                         ceil_mode=False, 
+                                         count_include_pad=True)
 
         # Third Convolutional Layer
         self.conv3_in_channels = self.conv2_out_channels
-        self.conv3_out_channels = 24
+        self.conv3_out_channels = 48
         self.conv3_kernel = 3
         self.conv3_stride = 1
         self.conv3_padding = 0
@@ -92,20 +103,25 @@ class Encoder(nn.Module):
         self.bn3_encode = nn.BatchNorm3d(num_features = self.conv3_out_channels)
         self.leakyrelu3 = nn.LeakyReLU(leakyrelu_const, inplace=True)  
 
-        # Third Average Pooling
+        # Third Pooling
         self.pool3_kernel = 2
         self.pool3_stride = 2 
         pool3_output_dim = calculate_pool_output_dim(D=conv3_output_dim,
                                                 K=self.pool3_kernel,
                                                 S=self.pool3_stride)
         print("Pool3 Output Dimension = " + str(pool3_output_dim)) 
-        self.pool3_encode = nn.MaxPool3d(kernel_size=self.pool3_kernel, 
-                                            stride=self.pool3_stride,
-                                            return_indices = self.pool_return_indices)  
+#         self.pool3_encode = nn.MaxPool3d(kernel_size=self.pool3_kernel, 
+#                                             stride=self.pool3_stride,
+#                                             return_indices = self.pool_return_indices) 
+        self.pool3_encode = nn.AvgPool3d(kernel_size=self.pool3_kernel, 
+                                         stride=self.pool3_stride, 
+                                         padding=0, 
+                                         ceil_mode=False, 
+                                         count_include_pad=True)
 
         # Fourth Convolutional Layer
         self.conv4_in_channels = self.conv3_out_channels
-        self.conv4_out_channels = 32
+        self.conv4_out_channels = 64
         self.conv4_kernel = 4
         self.conv4_stride = 2
         self.conv4_padding = 0
@@ -125,7 +141,7 @@ class Encoder(nn.Module):
 
         # Fifth Convolutional Layer
         self.conv5_in_channels = self.conv4_out_channels
-        self.conv5_out_channels = 64
+        self.conv5_out_channels = 128
         self.conv5_kernel = 3
         self.conv5_stride = 1
         self.conv5_padding = 0
@@ -145,7 +161,7 @@ class Encoder(nn.Module):
 
         # Sixth Convolutional Layer
         self.conv6_in_channels = self.conv5_out_channels
-        self.conv6_out_channels = 128
+        self.conv6_out_channels = 256
         self.conv6_kernel = 2
         self.conv6_stride = 1
         self.conv6_padding = 0
@@ -165,7 +181,7 @@ class Encoder(nn.Module):
 
         # 7th Convolutional Layer
         self.conv7_in_channels = self.conv6_out_channels
-        self.conv7_out_channels = 128
+        self.conv7_out_channels = 256
         self.conv7_kernel = 2
         self.conv7_stride = 1
         self.conv7_padding = 0
@@ -198,11 +214,15 @@ class Encoder(nn.Module):
 
     def forward(self, input):
         
+        ind_list = []
+        
         # Convolution Layers
 #         print("Input = " +str(input.shape))
         out = self.conv1_encode(input)
 #         print("conv1_encode = " + str(out.shape))
         out = self.pool1_encode(out)
+#         out, ind = self.pool1_encode(out)
+#         ind_list.append(ind)
 #         print("pool1_encode = " + str(out.shape))
         out = self.bn1_encode(out) 
         out = self.leakyrelu1(out)
@@ -210,6 +230,8 @@ class Encoder(nn.Module):
         out = self.conv2_encode(out)
 #         print("conv2_encode = " + str(out.shape))
         out = self.pool2_encode(out)
+#         out, ind = self.pool2_encode(out)
+#         ind_list.append(ind)
 #         print("pool2_encode = " + str(out.shape))
         out = self.bn2_encode(out) 
         out = self.leakyrelu2(out)
@@ -217,6 +239,8 @@ class Encoder(nn.Module):
         out = self.conv3_encode(out)
 #         print("conv3_encode = " + str(out.shape))
         out = self.pool3_encode(out)
+#         out, ind = self.pool3_encode(out)
+#         ind_list.append(ind)
 #         print("pool3_encode = " + str(out.shape))
         out = self.bn3_encode(out) 
         out = self.leakyrelu3(out)
@@ -253,5 +277,6 @@ class Encoder(nn.Module):
 #         out = self.fc2_encode(out)
 #         out = self.relu1(out)        
 
+#         return out, ind_list
         return out
 

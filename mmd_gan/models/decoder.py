@@ -23,8 +23,8 @@ class Decoder(nn.Module):
 #         self.leakyrelu2 = nn.LeakyReLU(leakyrelu_const, inplace=True)
 
         # 1st Deconvolutional Layer
-        self.deconv1_in_channels = 128
-        self.deconv1_out_channels = 128
+        self.deconv1_in_channels = 256
+        self.deconv1_out_channels = 256
         self.deconv1_kernel = 2
         self.deconv1_stride = 1
         self.deconv1_padding = 0
@@ -44,7 +44,7 @@ class Decoder(nn.Module):
 
         # 2nd Deconvolutional Layer
         self.deconv2_in_channels = self.deconv1_out_channels
-        self.deconv2_out_channels = 64
+        self.deconv2_out_channels = 128
         self.deconv2_kernel = 2
         self.deconv2_stride = 1
         self.deconv2_padding = 0
@@ -64,7 +64,7 @@ class Decoder(nn.Module):
         
         # 3rd Deconvolutional Layer
         self.deconv3_in_channels = self.deconv2_out_channels
-        self.deconv3_out_channels = 32
+        self.deconv3_out_channels = 64
         self.deconv3_kernel = 3
         self.deconv3_stride = 1
         self.deconv3_padding = 0
@@ -84,7 +84,7 @@ class Decoder(nn.Module):
         
         # 4th Deconvolutional Layer
         self.deconv4_in_channels = self.deconv3_out_channels
-        self.deconv4_out_channels = 24
+        self.deconv4_out_channels = 48
         self.deconv4_kernel = 4
         self.deconv4_stride = 2
         self.deconv4_padding = 0
@@ -102,20 +102,22 @@ class Decoder(nn.Module):
         self.bn4_decode = nn.BatchNorm3d(num_features = self.deconv4_out_channels)
         self.leakyrelu4 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
+        # Unpooling 1
         # Avg Unpooling 1
         # Just make 1 voxel to 8 voxels of 2-len edges
         # Implemented in forward pass
-        self.avgunpool1_scale = 2
-        self.avgunpool1 = nn.Upsample(scale_factor = self.avgunpool1_scale, mode='nearest')
-        
+        self.unpool1_scale = 2
+        self.unpool1 = nn.Upsample(scale_factor = self.unpool1_scale, mode='nearest')
+        # Max Unpooling 1
+#         self.unpool1 = nn.MaxUnpool3d(kernel_size = self.unpool1_scale, stride=None, padding=0)
         
         # 5th Deconvolutional Layer
         self.deconv5_in_channels = self.deconv4_out_channels
-        self.deconv5_out_channels = 12
+        self.deconv5_out_channels = 24
         self.deconv5_kernel = 3
         self.deconv5_stride = 1
         self.deconv5_padding = 0
-        deconv5_output_dim = calculate_deconv_output_dim(D=deconv4_output_dim * self.avgunpool1_scale,
+        deconv5_output_dim = calculate_deconv_output_dim(D=deconv4_output_dim * self.unpool1_scale,
                                         K=self.deconv5_kernel,
                                         P=self.deconv5_padding,
                                         S=self.deconv5_stride)
@@ -129,20 +131,23 @@ class Decoder(nn.Module):
         self.bn5_decode = nn.BatchNorm3d(num_features = self.deconv5_out_channels)
         self.leakyrelu5 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
+        # Unpooling 2
         # Avg Unpooling 2
         # Just make 1 voxel to 8 voxels of 2-len edges
         # Implemented in forward pass
-        self.avgunpool2_scale = 2
-        self.avgunpool2 = nn.Upsample(scale_factor = self.avgunpool2_scale, mode='nearest')
+        self.unpool2_scale = 2
+        self.unpool2 = nn.Upsample(scale_factor = self.unpool2_scale, mode='nearest')
+        # Max Unpooling 2
+#         self.unpool2 = nn.MaxUnpool3d(kernel_size = self.unpool2_scale, stride=None, padding=0)
         
         
         # 6th Deconvolutional Layer
         self.deconv6_in_channels = self.deconv5_out_channels
-        self.deconv6_out_channels = 2
+        self.deconv6_out_channels = 4
         self.deconv6_kernel = 4
         self.deconv6_stride = 1
         self.deconv6_padding = 0
-        deconv6_output_dim = calculate_deconv_output_dim(D=deconv5_output_dim * self.avgunpool2_scale,
+        deconv6_output_dim = calculate_deconv_output_dim(D=deconv5_output_dim * self.unpool2_scale,
                                         K=self.deconv6_kernel,
                                         P=self.deconv6_padding,
                                         S=self.deconv6_stride)
@@ -156,11 +161,15 @@ class Decoder(nn.Module):
         self.bn6_decode = nn.BatchNorm3d(num_features = self.deconv6_out_channels)
         self.leakyrelu6 = nn.LeakyReLU(leakyrelu_const, inplace=True)
         
+        # Unpooling 3
         # Avg Unpooling 3
         # Just make 1 voxel to 8 voxels of 2-len edges
         # Implemented in forward pass
-        self.avgunpool3_scale = 2
-        self.avgunpool3 = nn.Upsample(scale_factor = self.avgunpool3_scale, mode='nearest')
+        self.unpool3_scale = 2
+        self.unpool3 = nn.Upsample(scale_factor = self.unpool3_scale, mode='nearest')
+        # Max Unpooling 2
+#         self.unpool3 = nn.MaxUnpool3d(kernel_size = self.unpool3_scale, stride=None, padding=0)
+        
         
         # 7th Deconvolutional Layer
         self.deconv7_in_channels = self.deconv6_out_channels
@@ -168,7 +177,7 @@ class Decoder(nn.Module):
         self.deconv7_kernel = 3
         self.deconv7_stride = 1
         self.deconv7_padding = 0
-        deconv7_output_dim = calculate_deconv_output_dim(D=deconv6_output_dim * self.avgunpool3_scale,
+        deconv7_output_dim = calculate_deconv_output_dim(D=deconv6_output_dim * self.unpool3_scale,
                                         K=self.deconv7_kernel,
                                         P=self.deconv7_padding,
                                         S=self.deconv7_stride)
@@ -213,29 +222,32 @@ class Decoder(nn.Module):
 #         print("deconv4_decode = " + str(out.shape))
         out = self.bn4_decode(out)
         out = self.leakyrelu4(out)
-        out = self.avgunpool1(out)
+        out = self.unpool1(out)
+#         out = self.unpool1(out,ind_list[0])
 #         print("avgunpool1 = " + str(out.shape))
 
         out = self.deconv5_decode(out)
 #         print("deconv5_decode = " + str(out.shape))
         out = self.bn5_decode(out)
         out = self.leakyrelu5(out)
-        out = self.avgunpool2(out)
+        out = self.unpool2(out)
+#         out = self.unpool2(out, ind_list[1])
 #         print("avgunpool2 = " + str(out.shape))
         
         out = self.deconv6_decode(out)
 #         print("deconv6_decode = " + str(out.shape))
         out = self.bn6_decode(out)
         out = self.leakyrelu6(out)
-        out = self.avgunpool3(out) 
+        out = self.unpool3(out) 
+#         out = self.unpool3(out, ind_list[2])
 #         print("avgunpool3 = " + str(out.shape))
         
         out = self.deconv7_decode(out)
 #         print("deconv7_decode = " + str(out.shape))
         out = self.bn7_decode(out)
 #         out = self.leakyrelu7(out)
-#         out = self.relu7(out) # for [0,1]
-        out = self.tanh7(out) # for [-1,1]
+        out = self.relu7(out) # for [0,1] or standardize no-shift
+#         out = self.tanh7(out) # for [-1,1]
         
 #         print("decoder out = " + str(out.shape))
 #         # Transformation

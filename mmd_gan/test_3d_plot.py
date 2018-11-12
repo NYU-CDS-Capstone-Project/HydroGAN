@@ -4,17 +4,27 @@ from utils.plot_utils import visualize_cube
 from utils.data_utils import inverse_transform_func
 import timeit
 
-def test_3d_plot(edge_test, edge_sample, f, scatter_size_magnitude,
-                viz_multiplier, plot_save_3d, inverse_transform, sampled_subcubes):
+def test_3d_plot(edge_test, 
+                 edge_sample, 
+                 f, 
+                 scatter_size_magnitude,
+                 viz_multiplier, 
+                 plot_save_3d, 
+                 inverse_transform, 
+                 sampled_subcubes):
 
-    testcd = define_test(s_test = edge_test, s_train = edge_sample)
+    testcd = define_test(s_test = edge_test, 
+                         s_train = edge_sample)
     testcd
 
+    print("Getting samples")
     trial_sample = get_samples(s_sample = edge_sample, 
                                 nsamples = 10, 
     #                             h5_filename = redshift_file, 
                                 test_coords = testcd,
                                 f = f)
+    print("Getting samples finished")
+    
     trial_sample
 
     trial_sample[0].shape
@@ -23,9 +33,9 @@ def test_3d_plot(edge_test, edge_sample, f, scatter_size_magnitude,
 
     trial_plot = trial_sample[0].reshape(-1,)
 
-    trial_plot.min()
-    trial_plot.max()
-    trial_plot.sum()
+#     trial_plot.min()
+#     trial_plot.max()
+#     trial_plot.sum()
 
     plt.figure(figsize = (16,8))
     plt.title("Trial Sample")
@@ -47,7 +57,7 @@ def test_3d_plot(edge_test, edge_sample, f, scatter_size_magnitude,
         trial_visual = trial_sample[i]
         trial_visual = inverse_transform_func(cube = trial_visual,
                                               inverse_type = inverse_transform, 
-                                         sampled_dataset = sampled_subcubes)
+                                              sampled_dataset = sampled_subcubes)
         print("trial_visual.shape = " + str(trial_visual.shape))
 #         print(trial_visual)
         trial_visual_edge = trial_visual.shape[0]

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
