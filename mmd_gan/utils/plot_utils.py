@@ -16,12 +16,14 @@ import timeit
 
 
 
+
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     """Function for dividing/truncating cmaps"""
     new_cmap = colors.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
+
 
 
 def visualize_cube(cube=None,      # array name
@@ -36,7 +38,8 @@ def visualize_cube(cube=None,      # array name
              color_map="Blues",
              plot_show = False,
              plot_save = False,
-             save_fig = False):
+             save_fig = False,
+                  raw_cube_max = False):
     
 
     """Takes as input;
@@ -60,6 +63,8 @@ def visualize_cube(cube=None,      # array name
     
     
     """
+    cube = cube/raw_cube_max
+    
     time_start = timeit.default_timer()
         
     cube_size = edge_dim
@@ -95,18 +100,29 @@ def visualize_cube(cube=None,      # array name
 #     print("data_1dim = " + str(data_1dim))
     
 #     initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
-#     mask = data_1dim > initial_mean
+#     mask = data_1dim / raw_cube_max > 0.
 #     mask = mask.astype(np.int)
+    """
+    Only plot the highest 10K points
+    """
+    n = -25000
+    sorted_data = np.sort(data_1dim)
+    n_max = sorted_data[n]
+    mask = data_1dim > n_max
+    mask = mask.astype(np.int)    
+    
+
 
     """
     Masking part of the data to speed up plotting time
     (may use just radius limiting below)
     """
     
-#     data_1dim = np.multiply(mask,data_1dim)
+    data_1dim = np.multiply(mask,data_1dim)
     ## mask X,Y,Z to match the dimensions of the data
     X, Y, Z, data_1dim = [axis[np.where(data_1dim>0)] for axis in [X,Y,Z,data_1dim]]
     
+    print("data_1dim len = " + str(len(data_1dim)))
     """
     norm_multiply = function argument
     data_1dim = data in one dimension, flattened
@@ -132,7 +148,8 @@ def visualize_cube(cube=None,      # array name
 #     print("Section 2 time = " + str((time_2 - time_1)/60))
     # avg: 0.03 sec
 
-    try:
+#     try:
+    if True:
         # checking min, max , mean of s
         print("scatter size mean = " + str(s.mean()))
         print("scatter size max = " + str(s.max()))
@@ -146,13 +163,19 @@ def visualize_cube(cube=None,      # array name
         1 = full color
         minval = 0.99 -> even 0 densities are shown with 0.99 color
         n = number of division between minval and maxval of color
-        
+        https://matplotlib.org/tutorials/colors/colormaps.html
         """
-        cmap = plt.get_cmap(color_map)
+#         cmap = plt.get_cmap(color_map)
+#         new_cmap = truncate_colormap(cmap, 
+#                                      minval = 0, 
+#                                      maxval = 1,
+#                                      n=100)
+
+        cmap = colors.LinearSegmentedColormap.from_list("", ["white","blue"])
         new_cmap = truncate_colormap(cmap, 
                                      minval = 0.5, 
                                      maxval = 1,
-                                     n=10)
+                                     n=100)
 
         ## IGNORE BELOW 3D PLOT FORMATTING 
 
@@ -238,7 +261,10 @@ def visualize_cube(cube=None,      # array name
                    c=data_1dim,   ## data, mapped to 1-dim
                    cmap=new_cmap,
                    s=s,           ## sizes - dims multiplied by each data point's magnitude
-                   alpha=0.7,
+#                    alpha=data_1dim,
+                   alpha = 0.25,
+                   vmin=0,
+                   vmax=1,
                    edgecolors="face")
         
         time_4 = timeit.default_timer()
@@ -258,8 +284,11 @@ def visualize_cube(cube=None,      # array name
 
         plt.close(fig)
     
-    except:
-        pass
+#     except:
+#         pass
+    
+    
+    
     
     
     
