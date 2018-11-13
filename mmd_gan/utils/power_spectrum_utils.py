@@ -14,6 +14,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def moving_average(data_set, periods=3):
+    weights = np.ones(periods) / periods
+    return np.convolve(data_set, weights, mode='valid')
+
 
 def power_spectrum_np(cube, mean_raw_cube):
     """
@@ -60,6 +64,10 @@ def power_spectrum_np(cube, mean_raw_cube):
     # compute "phyical" values of k
     dk = 2*np.pi/boxlen
     k = distances*dk
+    
+    # moving averages
+    Pk = moving_average(np.asarray(Pk), 5)
+    k = moving_average(np.asarray(k), 5)
 
     # plot results
 #     fig = plt.figure(figsize=(9,6))
@@ -102,8 +110,16 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
     - Power spectrum plots of both cubes
     in the same figure.
     """
-    real_cube = real_cube.reshape(1,1,real_cube.shape[0],real_cube.shape[0],real_cube.shape[0])
-    generated_cube = generated_cube.reshape(1,1,generated_cube.shape[0],generated_cube.shape[0],generated_cube.shape[0])
+    real_cube = real_cube.reshape(-1,
+                                  1,
+                                  real_cube.shape[2],
+                                  real_cube.shape[2],
+                                  real_cube.shape[2])
+    generated_cube = generated_cube.reshape(-1,
+                                            1,
+                                            generated_cube.shape[2],
+                                            generated_cube.shape[2],
+                                            generated_cube.shape[2])
     
     print("number of samples of real and generated cubes = " + str(real_cube.shape[0]))
     
