@@ -418,11 +418,19 @@ def plot_minibatch_value_sum(sum_real,
     other transformation types.
     """              
     plt.figure(figsize = (12,6))
-    plt.title("Sum of Minibatches (inverse transformed)")
-    plt.plot(sum_real, label = "sum_real", alpha = 0.9)
-    plt.plot(sum_real_recon, label = "sum_real_recon", alpha = 0.3)
-    plt.plot(sum_noise_gen, label = "sum_noise_gen", alpha = 0.9)
-    plt.plot(sum_noise_gen_recon, label = "sum_noise_gen_recon", alpha = 0.3)
+    plt.title("Sum of Minibatches (inverse transformed) in Log10 Scale")
+    plt.plot(np.log10(sum_real), 
+             label = "sum_real", 
+             alpha = 0.9)
+    plt.plot(np.log10(sum_real_recon), 
+             label = "sum_real_recon", 
+             alpha = 0.3)
+    plt.plot(np.log10(sum_noise_gen), 
+             label = "sum_noise_gen", 
+             alpha = 0.9)
+    plt.plot(np.log10(sum_noise_gen_recon), 
+             label = "sum_noise_gen_recon", 
+             alpha = 0.3)
     plt.legend()
     if save_plot:
         plt.savefig(redshift_fig_folder + 'sum_minibatch_' + str(t) + '.png', 

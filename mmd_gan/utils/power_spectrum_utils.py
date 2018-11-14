@@ -188,19 +188,19 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
 
 #         Pk_gen_cube = PKL.Pk(delta_gen_cube, BoxSize, axis, MAS, threads)
 
-        plt.plot(k_real, 
+        plt.plot(np.log10(k_real), 
                  np.log10(Pk_real), 
                  color="b", 
                  alpha = 0.2,
                  label="Real Samples")
-        plt.plot(k_gen, 
+        plt.plot(np.log10(k_gen), 
                  np.log10(Pk_gen), 
                  color="r",
                  alpha = 0.2,
                  label="Generated from Noise")
         plt.rcParams["font.size"] = 12
         plt.title("Power Spectrum Comparison - (Red: Real, Blue: Noise-Generated)")
-        plt.xlabel('k')
+        plt.xlabel('log10(k)')
         plt.ylabel('log10(Pk.k3D)')
 #         plt.legend()
     
