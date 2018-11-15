@@ -213,3 +213,160 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
     
     
     return 
+
+
+def plot_power_spec_aggregate(real_cube,        # should be inverse_transformed
+                    generated_cube,   # should be inverse_transformed
+                    raw_cube_mean,    # mean of the whole raw data cube (fields=z0.0)
+                    save_plot,
+                     show_plot,
+                     redshift_fig_folder,
+                     t,
+                    threads=1, 
+                    MAS="CIC", 
+                    axis=0, 
+                    BoxSize=75.0/2048*128,
+                             k_steps=20):
+    """Takes as input;
+    - Real cube: (batch_size x 1 x n x n x n) torch cuda FloatTensor,
+    - Generated copy: (batch_size x 1 x n x n x n) torch cuda FloatTensor,
+    - constant assignments: threads, MAS, axis, BoxSize.
+    
+    Returns;
+    - Power spectrum plots of both cubes
+    in the same figure.
+    """
+    real_cube = real_cube.reshape(-1,
+                                  1,
+                                  real_cube.shape[2],
+                                  real_cube.shape[2],
+                                  real_cube.shape[2])
+    generated_cube = generated_cube.reshape(-1,
+                                            1,
+                                            generated_cube.shape[2],
+                                            generated_cube.shape[2],
+                                            generated_cube.shape[2])
+    
+    print("number of samples of real and generated cubes = " + str(real_cube.shape[0]))
+    
+    
+    
+    
+#     ## Assert same type
+#     assert ((real_cube.type() == generated_cube.type())&(real_cube.type()=="torch.FloatTensor")),\
+#     "Both input cubes should be torch.FloatTensor or torch.cuda().FloatTensor. Got real_cube type " + real_cube.type() + ", generated_cube type " + generated_cube.type() +"."
+#     ## Assert equal dimensions
+#     assert (real_cube.size() == generated_cube.size()),\
+#     "Two input cubes must have the same size. Got real_cube size " + str(real_cube.size()) + ", generated cube size " + str(generated_cube.size())
+    
+#     ## if one or both of the cubes are cuda FloatTensors, detach them
+#     if real_cube.type() == "torch.cuda.FloatTensor":
+#         ## convert cuda FloatTensor to numpy array
+#         real_cube = real_cube.cpu().detach().numpy()
+#     else:
+#         real_cube = real_cube.numpy()
+    
+#     if generated_cube.type() == "torch.cuda.FloatTensor":
+#         ## convert cuda FloatTensor to numpy array
+#         generated_cube = generated_cube.cpu().detach().numpy()
+#     else:
+#         generated_cube = generated_cube.numpy()
+    
+    # constant assignments
+#     BoxSize = BoxSize
+#     axis = axis
+#     MAS = MAS
+#     threads = threads
+
+    
+    k_log_real = []
+    k_log_gen = []
+    Pk_log_real = []
+    Pk_log_gen = []
+
+    plt.figure(figsize=(16,8))
+    
+    for cube_no in range(real_cube.shape[0]):
+        
+        delta_real_cube = real_cube[cube_no][0]
+        delta_gen_cube = generated_cube[cube_no][0]
+        
+        Pk_real, dk_real, k_real = power_spectrum_np(cube = delta_real_cube, 
+                                                     mean_raw_cube = raw_cube_mean)
+        Pk_gen, dk_gen, k_gen = power_spectrum_np(cube = delta_gen_cube, 
+                                                  mean_raw_cube = raw_cube_mean)
+        
+        
+        
+        k_log_series_real = np.log10(np.array(k_real))
+        k_log_real.append(k_log_series_real)
+        k_log_series_gen = np.log10(np.array(k_gen))
+        k_log_gen.append(k_log_series_gen)
+        
+        Pk_log_series_real = np.log10(np.array(Pk_real))
+        Pk_log_real.append(Pk_log_series_real)
+        Pk_log_series_gen = np.log10(np.array(Pk_gen))
+        Pk_log_gen.append(Pk_log_series_gen)
+    
+    # get the means for each k value - among-cubes mean
+    k_log_means_real = np.mean(np.array(k_log_real),
+                                axis=0)
+    k_log_means_gen = np.mean(np.array(k_log_gen),
+                                axis=0)
+    
+    # ge the standard deviations for each x ax value
+    k_log_stds_real = np.std(np.array(k_log_real),
+                                axis=0)
+    
+    k_log_stds_gen = np.std(np.array(k_log_gen),
+                                axis=0)
+    # get the means for each k value
+    Pk_log_means_real = np.mean(np.array(Pk_log_real),
+                                axis=0)
+    Pk_log_means_gen = np.mean(np.array(Pk_log_gen),
+                                axis=0)
+    
+    # get the standard deviations for each x ax value
+    Pk_log_stds_real = np.std(np.array(Pk_log_real),
+                                axis=0)
+    
+    Pk_log_stds_gen = np.std(np.array(Pk_log_gen),
+                                axis=0)
+    
+    
+    
+    for i in range(len(k_log_means_gen)):
+        if i % k_steps == 0:
+            plt.plot([k_log_means_gen[i],
+                  k_log_means_gen[i],
+                 k_log_means_gen[i]],
+                [Pk_log_means_gen[i]-Pk_log_stds_gen[i],Pk_log_means_gen[i],
+                Pk_log_means_gen[i]+Pk_log_stds_gen[i]], color="k", alpha=0.5, marker="_")
+            
+    # plot power specs
+    plt.plot(k_log_means_real, 
+             Pk_log_means_real, 
+             color="r", 
+             alpha = 0.2,
+             label="Real Samples")
+    plt.plot(k_log_means_gen, 
+             Pk_log_means_gen, 
+             color="b",
+             alpha = 0.2,
+             label="Generated from Noise")
+        
+    plt.rcParams["font.size"] = 12
+    plt.title("Power Spectrum Comparison - (Red: Real, Blue: Noise-Generated)")
+    plt.xlabel('log10(k)')
+    plt.ylabel('log10(Pk.k3D)')
+    plt.legend()
+    
+    if save_plot:
+        plt.savefig(redshift_fig_folder + 'powerspectrum_' + str(t) + '.png', 
+                    bbox_inches='tight')
+    if show_plot:
+        plt.show() 
+    plt.close()
+    
+    
+    return 
