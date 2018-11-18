@@ -229,7 +229,7 @@ def standardize(cube_tensor,
                  inverse,
                  mean_cube, # input raw mean when inverse
                  stddev_cube, # input raw stddev when inverse
-                shift,
+                 shift,
                  redshift, 
                  save_or_return):
     """
@@ -282,10 +282,50 @@ def standardize(cube_tensor,
     else:
         return whole_new_f
     
+def root_transform(cube_tensor, 
+                 inverse,
+                 root,  # tthe fraction corresponding to the root
+                 redshift, 
+                 save_or_return):
+    """
+    save_or_return = True for save, False for return
+    """
+    whole_new_f = np.empty(shape = (cube_tensor.shape[0],
+                                    cube_tensor.shape[1],
+                                    cube_tensor.shape[2]),
+                       dtype = np.float64)
+    print(whole_new_f.shape)
+    
+    if inverse == False:
+        for i in range(cube_tensor.shape[0]):
+            print(str(i + 1) + " / " + str(cube_tensor.shape[0])) if i % 250 == 0 else False
+            whole_new_f[i:i+1,:,:] = np.power(cube_tensor[i:i+1,:,:],root)
+        
+    elif inverse == True:
+        whole_new_f = np.power(cube_tensor,1/root)
+
+    else:
+        raise Exception('Please specify whether you want normal or inverse scaling!')
+    
+    
+    if save_or_return and inverse == False:
+        hf = h5py.File('redshift'+redshift+'root'+root+'.h5', 'w')
+        hf.create_dataset('delta_HI', data=whole_new_f)
+        hf.close()
+    elif save_or_return and inverse == True:
+        raise Exception('Why do you want to save the inverse transformed?\nIts the normal one!')
+    else:
+        return whole_new_f
+    
+    
+    
+    
+    
 def inverse_transform_func(cube, inverse_type, sampled_dataset):  
     """
     Inverse Transform the Input Cube
-    # minmax01 / minmaxneg11 / std_noshift / std
+    # minmax01 / minmaxneg11 / std_noshift / std / 
+    4_root / 6_root / 8_root / 16_root
     """
     if inverse_type == "minmax01":
         cube = minmax_scale(cube_tensor = cube, 
@@ -306,7 +346,7 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset):
                  inverse = True,
                  mean_cube = sampled_dataset.mean_raw_val, 
                  stddev_cube = sampled_dataset.stddev_raw_val, 
-                shift = False,
+                 shift = False,
                  redshift = False, 
                  save_or_return = False)
     elif inverse_type == "std":
@@ -317,6 +357,30 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset):
                 shift = True,
                  redshift = False, 
                  save_or_return = False)
+    elif inverse_type == "4_root":
+        cube = root_transform(cube_tensor = cube, 
+                 inverse = True,
+                 root = 4,
+                 redshift = False, 
+                 save_or_return = False) 
+    elif inverse_type == "6_root":
+        cube = root_transform(cube_tensor = cube, 
+                 inverse = True,
+                 root = 6,
+                 redshift = False, 
+                 save_or_return = False) 
+    elif inverse_type == "8_root":
+        cube = root_transform(cube_tensor = cube, 
+                 inverse = True,
+                 root = 8,
+                 redshift = False, 
+                 save_or_return = False)      
+    elif inverse_type == "16_root":
+        cube = root_transform(cube_tensor = cube, 
+                 inverse = True,
+                 root = 16,
+                 redshift = False, 
+                 save_or_return = False)  
     else:
         print("not implemented yet!")
     

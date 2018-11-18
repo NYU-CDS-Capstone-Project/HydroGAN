@@ -8,7 +8,7 @@ def grad_norm(m, norm_type=2):
 
 def weights_init(m):
     """
-    
+    Be sure to name the layers accordingly!
     """
     
     classname = m.__class__.__name__
@@ -19,4 +19,4 @@ def weights_init(m):
         m.bias.data.fill_(0)
     elif classname.find('Linear') != -1:
         m.weight.data.normal_(0.0, 0.1)
-        m.bias.data.fill_(0)
+#         m.bias.data.fill_(0)

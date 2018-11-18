@@ -3,7 +3,7 @@
 def calculate_conv_output_dim(D,K,P,S):
 
     out_dim = (D-K+2*P)/S + 1
-    return out_dim
+    return int(out_dim)
 
 def calculate_pool_output_dim(D,K,S):
 
@@ -13,7 +13,7 @@ def calculate_pool_output_dim(D,K,S):
 def calculate_deconv_output_dim(D,K,P,S):
 
     out_dim = S * (D-1) - 2*P + K
-    return out_dim
+    return int(out_dim)
 
 def calculate_unpool_output_dim(D,K,P,S):
     """

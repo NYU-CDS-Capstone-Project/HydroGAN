@@ -125,32 +125,7 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
     
     
     
-    
-#     ## Assert same type
-#     assert ((real_cube.type() == generated_cube.type())&(real_cube.type()=="torch.FloatTensor")),\
-#     "Both input cubes should be torch.FloatTensor or torch.cuda().FloatTensor. Got real_cube type " + real_cube.type() + ", generated_cube type " + generated_cube.type() +"."
-#     ## Assert equal dimensions
-#     assert (real_cube.size() == generated_cube.size()),\
-#     "Two input cubes must have the same size. Got real_cube size " + str(real_cube.size()) + ", generated cube size " + str(generated_cube.size())
-    
-#     ## if one or both of the cubes are cuda FloatTensors, detach them
-#     if real_cube.type() == "torch.cuda.FloatTensor":
-#         ## convert cuda FloatTensor to numpy array
-#         real_cube = real_cube.cpu().detach().numpy()
-#     else:
-#         real_cube = real_cube.numpy()
-    
-#     if generated_cube.type() == "torch.cuda.FloatTensor":
-#         ## convert cuda FloatTensor to numpy array
-#         generated_cube = generated_cube.cpu().detach().numpy()
-#     else:
-#         generated_cube = generated_cube.numpy()
-    
-    # constant assignments
-#     BoxSize = BoxSize
-#     axis = axis
-#     MAS = MAS
-#     threads = threads
+
 
 
 
@@ -167,26 +142,6 @@ def plot_power_spec(real_cube,        # should be inverse_transformed
         Pk_gen, dk_gen, k_gen = power_spectrum_np(cube = delta_gen_cube, 
                                                   mean_raw_cube = raw_cube_mean)
         
-        
-        # CALCULATE POWER SPECTRUM OF THE REAL CUBE
-    
-    #     delta_real_cube /= np.mean(delta_real_cube,
-    #                               dtype=np.float64)
-#         delta_real_cube /= raw_cube_mean
-#         delta_real_cube -= 1.0
-#         delta_real_cube = delta_real_cube.astype(np.float32)
-
-#         Pk_real_cube = PKL.Pk(delta_real_cube, BoxSize, axis, MAS, threads)
-
-
-#         # CALCULATE POWER SPECTRUM OF THE GENERATED CUBE
-#     #     delta_gen_cube /= np.mean(delta_gen_cube,
-#     #                              dtype=np.float64)
-#         delta_gen_cube /= raw_cube_mean
-#         delta_gen_cube -= 1.0
-#         delta_gen_cube = delta_gen_cube.astype(np.float32)
-
-#         Pk_gen_cube = PKL.Pk(delta_gen_cube, BoxSize, axis, MAS, threads)
 
         plt.plot(np.log10(k_real), 
                  np.log10(Pk_real), 
@@ -379,26 +334,6 @@ def plot_power_spec_aggregate(real_cube,        # should be inverse_transformed
         Pk_gen, dk_gen, k_gen = power_spectrum_np(cube = delta_gen_cube, 
                                                   mean_raw_cube = raw_cube_mean)
         
-        
-        # CALCULATE POWER SPECTRUM OF THE REAL CUBE
-    
-    #     delta_real_cube /= np.mean(delta_real_cube,
-    #                               dtype=np.float64)
-#         delta_real_cube /= raw_cube_mean
-#         delta_real_cube -= 1.0
-#         delta_real_cube = delta_real_cube.astype(np.float32)
-
-#         Pk_real_cube = PKL.Pk(delta_real_cube, BoxSize, axis, MAS, threads)
-
-
-#         # CALCULATE POWER SPECTRUM OF THE GENERATED CUBE
-#     #     delta_gen_cube /= np.mean(delta_gen_cube,
-#     #                              dtype=np.float64)
-#         delta_gen_cube /= raw_cube_mean
-#         delta_gen_cube -= 1.0
-#         delta_gen_cube = delta_gen_cube.astype(np.float32)
-
-#         Pk_gen_cube = PKL.Pk(delta_gen_cube, BoxSize, axis, MAS, threads)
         
         k_log_series_real = np.log10(np.array(k_real))
         k_log_real.append(k_log_series_real)

@@ -151,9 +151,9 @@ def visualize_cube(cube=None,      # array name
 #     try:
     if True:
         # checking min, max , mean of s
-        print("scatter size mean = " + str(s.mean()))
-        print("scatter size max = " + str(s.max()))
-        print("scatter size min = " + str(s.min()))
+#         print("scatter size mean = " + str(s.mean()))
+#         print("scatter size max = " + str(s.max()))
+#         print("scatter size min = " + str(s.min()))
 
 
         """
@@ -223,7 +223,10 @@ def visualize_cube(cube=None,      # array name
 
         ax.add_collection3d(faces)
 
-        ax.scatter(points[:,0], points[:,1], points[:,2], s=0)
+        ax.scatter(points[:,0], 
+                   points[:,1], 
+                   points[:,2], 
+                   s=0)
 
         ax.set_aspect('equal')
 
@@ -386,7 +389,7 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
 
 
 
-def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_folder, t):
+def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_folder, t, dist_ae):
     """
     Args:
         fig_id(int): figure number
@@ -395,7 +398,31 @@ def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_f
         save_direct(string): directory to save
     """
     plt.figure(fig_id, figsize = (10,5))
+    
+    # adjusting the plot title of Reconstruction Errors based on L1 or L2
+    if fig_title in ["L2_AE_X_D_list","L2_AE_Y_D_list"]:
+#         if dist_ae not in ["L2_AE_X_D_list", "L2_AE_Y_D_list"]:
+        if dist_ae != "L2":
+            fig_title = fig_title.replace("L2","L1")
     plt.title(fig_title)
+    
+    # taking log10 of some dat for better viewing
+#     if fig_title in ["mmd2_D_before_ReLU_list", 
+#                      "mmd2_D_after_ReLU_list",
+#                      "L2_AE_X_D_list",
+#                      "L2_AE_Y_D_list",
+#                      "mmd2_G_before_ReLU_list", 
+#                      "mmd2_G_after_ReLU_list"]:
+#         try:
+#             data = np.log(np.array(data))
+#             plt.ylabel("log("+fig_title+")")
+#         except:
+#             pass
+#     else:
+#         plt.ylabel(fig_title)
+        
+    plt.xlabel("Number of Minibatch Iterations")
+    
     plt.plot(data)
     if save_plot:
         plt.savefig(redshift_fig_folder + fig_title +'_' + str(t) + '.png', 
@@ -419,6 +446,7 @@ def plot_minibatch_value_sum(sum_real,
     """              
     plt.figure(figsize = (12,6))
     plt.title("Sum of Minibatches (inverse transformed) in Log10 Scale")
+    plt.xlabel("Epochs")
     plt.plot(np.log10(sum_real), 
              label = "sum_real", 
              alpha = 0.9)
