@@ -35,7 +35,7 @@ def get_samples(s_sample,
                 f):   # given as f["delta_HI"]
     #n is size of minibatch, get valid samples (not intersecting with test_coords)
     sample_list=[]
-    m = 2048 - 128
+    m = 2048 - s_sample
     
     
     for n in range(nsamples):
@@ -103,7 +103,7 @@ class HydrogenDataset(Dataset):
 
     def __init__(self, h5_file, f, root_dir, s_test, s_train,
                  s_sample, nsamples, min_cube, max_cube, mean_cube, stddev_cube,
-                min_raw_cube,max_raw_cube,mean_raw_cube,stddev_raw_cube):
+                min_raw_cube,max_raw_cube,mean_raw_cube,stddev_raw_cube, rotate_cubes):
         """
         Args:
             h5_file (string): name of the h5 file with 32 sampled cubes.
@@ -144,6 +144,9 @@ class HydrogenDataset(Dataset):
         self.max_raw_val = max_raw_cube
         self.mean_raw_val = mean_raw_cube
         self.stddev_raw_val = stddev_raw_cube
+        
+        # Whether to rotate the sampled subcubes
+        self.rotate_cubes = rotate_cubes
 
     def __len__(self):
         # Function called when len(self) is executed
@@ -171,6 +174,13 @@ class HydrogenDataset(Dataset):
                              nsamples = 1,
                              test_coords = self.t_coords,
                             f = self.f)
+        
+        if self.rotate_cubes == True:
+            # 0.5 probability of rotation
+            if random.choice([True, False]) == True:
+                t = random.randint(1,4)
+                sample = np.rot90(sample, t)
+        
 
         sample = np.array(sample).reshape((1,self.s_sample,self.s_sample,self.s_sample))
 

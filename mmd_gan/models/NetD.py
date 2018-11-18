@@ -21,13 +21,9 @@ class NetD(nn.Module):
 
     def forward(self, input):
         f_enc_X = self.encoder(input)
+        f_enc_X_size = f_enc_X.size()
 #         print("f_enc_X size = " + str(f_enc_X.size()))
 #         print("f_enc_X outputted.")
-        
-#         # The FC Layers
-#         f_enc_X = self.fc1(f_enc_X)
-#         f_enc_X = self.fc1(f_enc_X)
-        
         
         f_dec_X = self.decoder(f_enc_X)
 #         print("f_dec_X size = " + str(f_dec_X.size()))
@@ -35,4 +31,4 @@ class NetD(nn.Module):
 
         f_enc_X = f_enc_X.view(input.size(0), -1)
         f_dec_X = f_dec_X.view(input.size(0), -1)
-        return f_enc_X, f_dec_X
+        return f_enc_X, f_dec_X, f_enc_X_size
