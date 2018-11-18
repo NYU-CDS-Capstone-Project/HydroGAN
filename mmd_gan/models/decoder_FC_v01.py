@@ -4,31 +4,52 @@ from utils.conv_utils import calculate_deconv_output_dim
 # input: batch_size * k * 1 * 1
 # output: batch_size * nc * image_size * image_size
 class Decoder(nn.Module):
-    def __init__(self, embedded_cube_dimension,fc1_hidden_dim, fc2_output_dim, 
-                embedding_dim, leakyrelu_const):
+    def __init__(self, 
+                 embedded_cube_edge,
+                 fc1_hidden_dim, 
+                 fc2_output_dim, 
+                 embedding_dim, 
+                 leakyrelu_const,
+                 deconv_input_channels):
         super(Decoder, self).__init__()
+        
+        assert deconv_input_channels % 2 == 0, "Input channels have to be divisible by 2"
 
-#         # 1st FC Layer
-#         self.embedding_dim = embedding_dim
-#         self.fc1_in_features = self.embedding_dim 
-#         self.fc1_hidden_dim = fc1_hidden_dim
-#         self.fc1_decode = nn.Linear(in_features=self.fc1_in_features,
-#                                     out_features=self.fc1_hidden_dim)
-#         self.leakyrelu1 = nn.LeakyReLU(leakyrelu_const, inplace=True)
+        """
+        Fully Connected Layers
+        
+        The first input dimension has to be same with 
+        the output dimension of the Encoder
+        """
+        # 1st FC Layer
+        self.fc1_decode = nn.Linear(in_features=embedding_dim,
+                                    out_features=fc1_hidden_dim)
+        self.leakyrelu1 = nn.LeakyReLU(leakyrelu_const, inplace=True)
 
-#         # 2nd FC Layer
-#         self.fc2_output_dim = fc2_output_dim
-#         self.fc2_decode = nn.Linear(in_features=self.fc1_hidden_dim,
-#                                     out_features=self.fc2_output_dim )
-#         self.leakyrelu2 = nn.LeakyReLU(leakyrelu_const, inplace=True)
-
+        # 2nd FC Layer
+        self.fc2_decode = nn.Linear(in_features=fc1_hidden_dim,
+                                    out_features=fc2_output_dim)
+        self.leakyrelu2 = nn.LeakyReLU(leakyrelu_const, inplace=True)
+        
+        # 3rd FC Layer
+        """
+        Output of this layer should be embedded_cube_edge**3 x deconv_input_channels
+        """
+        self.fc3_output_dim = embedded_cube_edge**3 * deconv_input_channels
+        self.fc3_decode = nn.Linear(in_features=fc2_output_dim,
+                                    out_features=self.fc3_output_dim)
+        self.leakyrelu3 = nn.LeakyReLU(leakyrelu_const, inplace=True)
+        
+        """
+        Deconvolution Layers
+        """
         # 1st Deconvolutional Layer
-        self.deconv1_in_channels = 256
-        self.deconv1_out_channels = 256
+        self.deconv1_in_channels = deconv_input_channels
+        self.deconv1_out_channels = deconv_input_channels / 2
         self.deconv1_kernel = 2
         self.deconv1_stride = 1
         self.deconv1_padding = 0
-        deconv1_output_dim = calculate_deconv_output_dim(D=embedded_cube_dimension,
+        deconv1_output_dim = calculate_deconv_output_dim(D=embedded_cube_edge,
                                         K=self.deconv1_kernel,
                                         P=self.deconv1_padding,
                                         S=self.deconv1_stride)
@@ -44,7 +65,7 @@ class Decoder(nn.Module):
 
         # 2nd Deconvolutional Layer
         self.deconv2_in_channels = self.deconv1_out_channels
-        self.deconv2_out_channels = 128
+        self.deconv2_out_channels = self.deconv2_in_channels / 2
         self.deconv2_kernel = 2
         self.deconv2_stride = 1
         self.deconv2_padding = 0
@@ -64,7 +85,7 @@ class Decoder(nn.Module):
         
         # 3rd Deconvolutional Layer
         self.deconv3_in_channels = self.deconv2_out_channels
-        self.deconv3_out_channels = 64
+        self.deconv3_out_channels = self.deconv3_in_channels / 2
         self.deconv3_kernel = 3
         self.deconv3_stride = 1
         self.deconv3_padding = 0
@@ -84,7 +105,7 @@ class Decoder(nn.Module):
         
         # 4th Deconvolutional Layer
         self.deconv4_in_channels = self.deconv3_out_channels
-        self.deconv4_out_channels = 48
+        self.deconv4_out_channels = self.deconv4_in_channels / 2
         self.deconv4_kernel = 4
         self.deconv4_stride = 2
         self.deconv4_padding = 0
@@ -113,7 +134,7 @@ class Decoder(nn.Module):
         
         # 5th Deconvolutional Layer
         self.deconv5_in_channels = self.deconv4_out_channels
-        self.deconv5_out_channels = 24
+        self.deconv5_out_channels = self.deconv5_in_channels / 2
         self.deconv5_kernel = 3
         self.deconv5_stride = 1
         self.deconv5_padding = 0
@@ -143,7 +164,7 @@ class Decoder(nn.Module):
         
         # 6th Deconvolutional Layer
         self.deconv6_in_channels = self.deconv5_out_channels
-        self.deconv6_out_channels = 4
+        self.deconv6_out_channels = self.deconv6_in_channels / 2
         self.deconv6_kernel = 4
         self.deconv6_stride = 1
         self.deconv6_padding = 0
@@ -173,7 +194,7 @@ class Decoder(nn.Module):
         
         # 7th Deconvolutional Layer
         self.deconv7_in_channels = self.deconv6_out_channels
-        self.deconv7_out_channels = 1
+        self.deconv7_out_channels = self.deconv7_in_channels / 2
         self.deconv7_kernel = 3
         self.deconv7_stride = 1
         self.deconv7_padding = 0
@@ -200,10 +221,33 @@ class Decoder(nn.Module):
 
     def forward(self, input):
 #         print("\nDecoder - Forward Pass")
+
+        """
+        Fully Connected Layers
+        """
+        out = self.fc1_decode(out)
+        out = self.leakyrelu1(out)
         
-        # Deconvolution Layers
+        out = self.fc2_decode(out)
+        out = self.leakyrelu2(out)
+
+        out = self.fc3_decode(out)
+        out = self.leakyrelu3(out)
+        
+        """
+        Transformation
+        """
+        out = out.view(batch_size, 1, embedded_cube_edge,
+                                      embedded_cube_edge,
+                                      embedded_cube_edge)
+        
+        
+        """
+        Deconvolution Layers
+        """
 #         print("Input = " +str(input.shape))
-        out = self.deconv1_decode(input)
+#         out = self.deconv1_decode(input)
+        out = self.deconv1_decode(out)
 #         print("deconv1_decode = " + str(out.shape))
         out = self.bn1_decode(out)
         out = self.leakyrelu1(out)
@@ -244,7 +288,7 @@ class Decoder(nn.Module):
         
         out = self.deconv7_decode(out)
 #         print("deconv7_decode = " + str(out.shape))
-#         out = self.bn7_decode(out)
+        out = self.bn7_decode(out)
 #         out = self.leakyrelu7(out)
         out = self.relu7(out) # for [0,1] or standardize no-shift
 #         out = self.tanh7(out) # for [-1,1]
