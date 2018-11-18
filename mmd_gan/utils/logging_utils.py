@@ -19,5 +19,5 @@ def get_output_folder(run_in_jupyter = False):
     last_folder_no = max(last_folder_no)
 #     print(last_folder_no)
     
-    new_folder = folder_base + "_" + str(last_folder_no+1)
+    new_folder = folder_base + "-" + str(last_folder_no+1)
     return new_folder
