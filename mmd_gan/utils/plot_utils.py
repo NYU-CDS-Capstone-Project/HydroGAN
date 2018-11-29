@@ -259,7 +259,11 @@ def visualize_cube(cube=None,      # array name
         time_3 = timeit.default_timer()
 #         print("Section 3 time = " + str((time_3 - time_2)/60))
         # avg: 0.0005 sec
-
+        try:
+            ax.set_title(save_fig.split("/")[-1])
+        except:
+            pass
+        
         ax.scatter(X, Y, Z,       ## axis vals
                    c=data_1dim,   ## data, mapped to 1-dim
                    cmap=new_cmap,
@@ -423,7 +427,8 @@ def mmd_loss_plots(fig_id, fig_title, data, show_plot, save_plot, redshift_fig_f
         
     plt.xlabel("Number of Minibatch Iterations")
     
-    plt.plot(data)
+    plt.plot(data,
+             linewidth=0.5)
     if save_plot:
         plt.savefig(redshift_fig_folder + fig_title +'_' + str(t) + '.png', 
                     bbox_inches='tight')
@@ -449,16 +454,20 @@ def plot_minibatch_value_sum(sum_real,
     plt.xlabel("Epochs")
     plt.plot(np.log10(sum_real), 
              label = "sum_real", 
-             alpha = 0.9)
+             alpha = 0.9,
+             color = "maroon")
     plt.plot(np.log10(sum_real_recon), 
              label = "sum_real_recon", 
-             alpha = 0.3)
+             alpha = 0.3,
+             color = "red")
     plt.plot(np.log10(sum_noise_gen), 
              label = "sum_noise_gen", 
-             alpha = 0.9)
+             alpha = 0.9,
+             color = "darkblue")
     plt.plot(np.log10(sum_noise_gen_recon), 
              label = "sum_noise_gen_recon", 
-             alpha = 0.3)
+             alpha = 0.3,
+             color = "blue")
     plt.legend()
     if save_plot:
         plt.savefig(redshift_fig_folder + 'sum_minibatch_' + str(t) + '.png', 
@@ -470,4 +479,55 @@ def plot_minibatch_value_sum(sum_real,
     
     
     
+def visualize2d(real, fake, raw_cube_mean, t,
+                redshift_fig_folder = False,
+                save_plot = False, show_plot = False):
+    """
+    real = 5d tensor
+    fake = 5d tensor
+    """
+    
+#     max_ = raw_cube_mean
+    max_ = 5
+#     print("max_ = "  +str(max_))
+    cols = real.shape[0]//2
+    rows = 2
+    
+    fig, axes = plt.subplots(nrows=2, ncols=cols, figsize=(16,4))
+    
+    for ax, row in zip(axes[:,0], ['Generated', 'Real']):
+        ax.set_ylabel(row, rotation=90, fontsize=16)
+        
+#     print("Fake 2D: " + str(fake[0][0].mean(axis=1)))
+#     print("Real 2D: " + str(real[0][0].mean(axis=1)))
+    
+    m = 0
+    for ax in axes.flat:
+        #Plot only half of the mini-batch
+        if m < cols:
+#             print("fake max = "  +str(np.max(fake[m][0])))
+#             print("fake min = "  +str(np.min(fake[m][0])))
+            im = ax.imshow(np.log(fake[m][0].mean(axis=1)), aspect='equal', 
+                       interpolation=None, vmin=0, vmax=max_)
+        
+        else:
+#             print("real max = "  +str(np.max(real[m][0])))
+#             print("real min = "  +str(np.min(real[m][0])))
+            im = ax.imshow(np.log(real[m][0].mean(axis=1)), aspect='equal', 
+                       interpolation=None, vmin=0, vmax=max_)
+        m += 1
+        ax.set_xticks([])
+        ax.set_yticks([])
+    #fig.subplots_adjust(right=.8)
+    #cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+    #fig.colorbar(ax, cax=cbar_ax)
+    fig.tight_layout() 
+    
+    if save_plot:
+        plt.savefig(redshift_fig_folder + 'proj_2d_' + str(t) + '.png', 
+                    bbox_inches='tight')
+    if show_plot:
+        plt.show() 
+    
+    plt.close()    
 

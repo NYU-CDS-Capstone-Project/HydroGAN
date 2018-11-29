@@ -299,10 +299,10 @@ def root_transform(cube_tensor,
     if inverse == False:
         for i in range(cube_tensor.shape[0]):
             print(str(i + 1) + " / " + str(cube_tensor.shape[0])) if i % 250 == 0 else False
-            whole_new_f[i:i+1,:,:] = np.power(cube_tensor[i:i+1,:,:],root)
+            whole_new_f[i:i+1,:,:] = np.power(cube_tensor[i:i+1,:,:],1.0/root)
         
     elif inverse == True:
-        whole_new_f = np.power(cube_tensor,1/root)
+        whole_new_f = np.power(cube_tensor,root)
 
     else:
         raise Exception('Please specify whether you want normal or inverse scaling!')
