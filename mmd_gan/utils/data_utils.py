@@ -485,13 +485,13 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset, root):
                  save_or_return = False)
     #new ones, SB
     elif inverse_type == "scale_01":
-        scale_01(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+        cube = scale_01(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
     
     elif inverse_type == "scale_neg11":
-        scale_neg11(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+        cube = scale_neg11(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
         
     elif inverse_type == "root_transform_01":
-        root_transform_01(cube_tensor, 
+        cube = root_transform_01(cube_tensor, 
                          TRUE,
                          root,  
                          sampled_dataset.min_raw_val,
@@ -500,7 +500,7 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset, root):
                          save_or_return = False):
                 
     elif inverse_type == "root_transform_neg11":
-        root_transform_01(cube_tensor, 
+        cube = root_transform_01(cube_tensor, 
                          TRUE,
                          root,  
                          sampled_dataset.min_raw_val,
