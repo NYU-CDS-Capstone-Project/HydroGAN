@@ -336,13 +336,14 @@ def root_transform_neg11(cube_tensor,
     if inverse == False:
         for i in range(cube_tensor.shape[0]):
             print(str(i + 1) + " / " + str(cube_tensor.shape[0])) if i % 250 == 0 else False
-            whole_new_f[i:i+1,:,:] = 2.0 * (np.power(cube_tensor[i:i+1,:,:] , 1.0/root) - min_cube) / (max_cube - min_cube) - 1.0
+            after_root = np.power(cube_tensor[i:i+1,:,:] , 1.0/root)
+            whole_new_f[i:i+1,:,:] = 2.0 * (after_root - min_cube) / (max_cube - min_cube) - 1.0
 
         
     elif inverse == True:
         root_min_cube = np.power(min_cube, 1.0 / root)
         root_max_cube = np.power(max_cube, 1.0 / root)
-        cube_tensor = (cube_tensor * (root_max_cube - root_min_cube)) / 2.0 + root_min_cube
+        cube_tensor = (cube_tensor + 1) * (root_max_cube - root_min_cube) / 2.0 + (root_min_cube)
         whole_new_f = np.power(cube_tensor,root)
 
     else:
@@ -350,17 +351,79 @@ def root_transform_neg11(cube_tensor,
     
     
     if save_or_return and inverse == False:
-        hf = h5py.File('redshift' + redshift + '_root' + str(root) + '_neg11.h5', 'w')
+        hf = h5py.File('redshift' + redshift + 'root' + root + '.h5', 'w')
         hf.create_dataset('delta_HI', data=whole_new_f)
         hf.close()
     elif save_or_return and inverse == True:
         raise Exception('Why do you want to save the inverse transformed?\nIts the normal one!')
     else:
         return whole_new_f    
+
+
+
+
+
+  
+def root_transform_01(cube_tensor, 
+                         inverse,
+                         root,  # the fraction corresponding to the root
+                         min_cube,
+                         max_cube,
+                         redshift, 
+                         save_or_return):
+    """
+    save_or_return = True for save, False for return
+    """
+    whole_new_f = np.empty(shape = (cube_tensor.shape[0],
+                                    cube_tensor.shape[1],
+                                    cube_tensor.shape[2]),
+                       dtype = np.float64)
+    print(whole_new_f.shape)
+    
+    if inverse == False:
+        for i in range(cube_tensor.shape[0]):
+            print(str(i + 1) + " / " + str(cube_tensor.shape[0])) if i % 250 == 0 else False
+            after_root = np.power(cube_tensor[i:i+1,:,:] , 1.0/root)
+            whole_new_f[i:i+1,:,:] = (after_root - min_cube) / (max_cube - min_cube) 
+
+        
+    elif inverse == True:
+        root_min_cube = np.power(min_cube, 1.0 / root)
+        root_max_cube = np.power(max_cube, 1.0 / root) 
+        #inverse
+        cube_tensor = (cube_tensor * (root_max_cube - root_min_cube)) + root_min_cube
+        whole_new_f = np.power(cube_tensor,root)
+
+    else:
+        raise Exception('Please specify whether you want normal or inverse scaling!')
     
     
+    if save_or_return and inverse == False:
+        hf = h5py.File('redshift' + redshift + 'root' + root + '.h5', 'w')
+        hf.create_dataset('delta_HI', data=whole_new_f)
+        hf.close()
+    elif save_or_return and inverse == True:
+        raise Exception('Why do you want to save the inverse transformed?\nIts the normal one!')
+    else:
+        return whole_new_f    
+
+def scale_01(cube, raw_cube_min, raw_cube_max, inverse):  
+    if inverse == False :
+        output = (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) 
+    else :
+        output = (cube * (raw_cube_max  - raw_cube_min)) + raw_cube_min
+    return output
+
+def scale_neg11(cube, raw_cube_min, raw_cube_max, inverse): 
+    if inverse == False :
+        output = 2.0 * (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) - 1.0
+    else :
+        output = (cube + 1.0) * (raw_cube_max- raw_cube_min) / 2.0 + (raw_cube_min)
+    return output 
+
     
-def inverse_transform_func(cube, inverse_type, sampled_dataset):  
+    
+def inverse_transform_func(cube, inverse_type, sampled_dataset, root):  
     """
     Inverse Transform the Input Cube
     # minmax01 / minmaxneg11 / std_noshift / std / 
@@ -419,7 +482,32 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset):
                  inverse = True,
                  root = 16,
                  redshift = False, 
-                 save_or_return = False)  
+                 save_or_return = False)
+    #new ones, SB
+    elif inverse_type == "scale_01":
+        scale_01(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+    
+    elif inverse_type == "scale_neg11":
+        scale_neg11(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+        
+    elif inverse_type == "root_transform_01":
+        root_transform_01(cube_tensor, 
+                         TRUE,
+                         root,  
+                         sampled_dataset.min_raw_val,
+                         sampled_dataset.max_raw_val,
+                         redshift= False, 
+                         save_or_return = False):
+                
+    elif inverse_type == "root_transform_neg11":
+        root_transform_01(cube_tensor, 
+                         TRUE,
+                         root,  
+                         sampled_dataset.min_raw_val,
+                         sampled_dataset.max_raw_val,
+                         redshift = False, 
+                         save_or_return = False):
+        
     else:
         print("not implemented yet!")
     
@@ -430,54 +518,4 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset):
     
     return cube
 
-
-###### On the fly transformations
-
-def transform_root_scale_01(cube,root,raw_min,raw_max,inverse):
-    
-    root_min_cube = np.power(raw_min, 1.0 / root)
-    root_max_cube = np.power(raw_max, 1.0 / root)
-    
-    if inverse == False:
-        cube = (np.power(cube , 1.0/root) - root_min_cube) / (root_max_cube - root_min_cube)
-    else:
-        cube = (cube * (root_max_cube - root_min_cube)) + root_min_cube
-        cube = np.power(cube , root)
-        
-    return cube
-    
-    
-def transform_root_scale_neg11(cube,root,raw_min,raw_max,inverse):   
-    
-    root_min_cube = np.power(raw_min, 1.0 / root)
-    root_max_cube = np.power(raw_max, 1.0 / root)
-    
-    if inverse == False:
-        cube = 2.0 * (np.power(cube , 1.0/root) - root_min_cube) / (root_max_cube - root_min_cube) - 1.0
-    else:
-        cube = (cube * (root_max_cube - root_min_cube)) / 2.0 + root_min_cube
-        cube = np.power(cube , root)
-        
-    return cube
-
-
-def scale_01(cube, raw_cube_min, raw_cube_max, inverse):  
-    if inverse == False :
-        output = (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) 
-    else :
-        output = (cube * (raw_cube_max  - raw_cube_min)) + raw_cube_min
-    return output
-
-
-def scale_neg11(cube, raw_cube_min, raw_cube_max, inverse): 
-    if inverse == False :
-        output = 2.0 * (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) - 1.0
-    else :
-        output = (cube + 1.0) * (raw_cube_max- raw_cube_min) / 2.0 + (raw_cube_min)
-    return output 
-    
-    
-    
-    
-    
 
