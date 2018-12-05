@@ -407,7 +407,19 @@ def root_transform_01(cube_tensor,
     else:
         return whole_new_f    
 
+def scale_01(cube, main_cube_min, main_cube_max, inverse):  
+    if inverse == False :
+        output = (cube - main_cube_min) / (main_cube_max - main_cube_min) 
+    else :
+        output = (cube * (main_cube_max  - main_cube_min)) + main_cube_min
+    return output
 
+def scale_neg11(cube, main_cube_min, main_cube_max, inverse): 
+    if inverse == False :
+        output = 2.0 * (cube - main_cube_min) / (main_cube_max - main_cube_min) - 1.0
+    else :
+        output = (cube + 1) * (main_cube_max- main_cube_min) / 2.0 + (main_cube_min)
+    return output 
 
     
     
