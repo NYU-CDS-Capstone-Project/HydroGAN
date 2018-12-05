@@ -102,15 +102,20 @@ def visualize_cube(cube=None,      # array name
 #     initial_mean = np.mean(data_1dim) - stdev_to_white*np.std(data_1dim)
 #     mask = data_1dim / raw_cube_max > 0.
 #     mask = mask.astype(np.int)
+#     """
+#     Only plot the highest 10K points
+#     """
+#     n = -25000
+#     sorted_data = np.sort(data_1dim)
+#     n_max = sorted_data[n]
+#     mask = data_1dim > n_max
+#     mask = mask.astype(np.int)    
+
     """
-    Only plot the highest 10K points
+    Plot Randomly Selected Points
     """
-    n = -25000
-    sorted_data = np.sort(data_1dim)
-    n_max = sorted_data[n]
-    mask = data_1dim > n_max
-    mask = mask.astype(np.int)    
-    
+    p = 0.05 # the proportion of all points to be plotted
+    mask = np.random.binomial(n = 1, p = p, size = len(data_1dim))
 
 
     """
