@@ -191,7 +191,14 @@ class HydrogenDataset(Dataset):
             #s[-1,1] scaling
             sample = scale_neg11(sample, self.min_raw_val, self.max_raw_val, False): 
 
-        
+        if self.transform=='transform_root_scale_01':
+            #transform and [0-1] scaling
+            sample =  transform_root_scale_01(sample, self.min_raw_val, self.max_raw_val, False):  
+    
+        if self.transform=='transform_root_scale_neg11':
+            #transform and [-1,1] scaling
+            sample = transform_root_scale_neg11(sample, self.min_raw_val, self.max_raw_val, False): 
+
 
         sample = np.array(sample).reshape((1,self.s_sample,self.s_sample,self.s_sample))
 
