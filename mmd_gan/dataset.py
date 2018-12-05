@@ -180,6 +180,17 @@ class HydrogenDataset(Dataset):
             if random.choice([True, False]) == True:
                 t = random.randint(1,4)
                 sample = np.rot90(sample, t)
+
+
+        #transforms happens here
+        if self.transform=='scale_01':
+            #[0-1] scaling
+            sample =  scale_01(sample, self.min_raw_val, self.max_raw_val, False):  
+    
+        if self.transform=='scale_neg11':
+            #s[-1,1] scaling
+            sample = scale_neg11(sample, self.min_raw_val, self.max_raw_val, False): 
+
         
 
         sample = np.array(sample).reshape((1,self.s_sample,self.s_sample,self.s_sample))
