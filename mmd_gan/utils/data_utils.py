@@ -363,7 +363,6 @@ def root_transform_neg11(cube_tensor,
 
 
 
-  
 def root_transform_01(cube_tensor, 
                          inverse,
                          root,  # the fraction corresponding to the root
@@ -407,6 +406,9 @@ def root_transform_01(cube_tensor,
     else:
         return whole_new_f    
 
+"""
+ON THE FLY TRANSFORMATION FUNCTIONS
+""" 
 def scale_01(cube, raw_cube_min, raw_cube_max, inverse):  
     if inverse == False :
         output = (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) 
@@ -414,99 +416,130 @@ def scale_01(cube, raw_cube_min, raw_cube_max, inverse):
         output = (cube * (raw_cube_max  - raw_cube_min)) + raw_cube_min
     return output
 
+
 def scale_neg11(cube, raw_cube_min, raw_cube_max, inverse): 
     if inverse == False :
         output = 2.0 * (cube - raw_cube_min) / (raw_cube_max - raw_cube_min) - 1.0
     else :
-        output = (cube + 1.0) * (raw_cube_max- raw_cube_min) / 2.0 + (raw_cube_min)
+        output = (cube + 1.0) * (raw_cube_max - raw_cube_min) / 2.0 + (raw_cube_min)
     return output 
+
+def root_transform(cube, raw_cube_min, raw_cube_max, inverse, root):
+    if inverse == False :
+        output = np.power(cube , 1.0/root)
+    else :
+        output = np.power(cube,root)
+        
+    return output 
+
+def root_transform_neg11(cube, raw_cube_min, raw_cube_max, inverse, root):
+    if inverse == False :
+        output = 2.0 * (np.power(cube , 1.0/root) - raw_cube_min) / (raw_cube_max - raw_cube_min) - 1.0
+        
+    else :
+        root_min_cube = np.power(raw_cube_min, 1.0 / root)
+        root_max_cube = np.power(raw_cube_max, 1.0 / root)
+        cube = (cube + 1) * (root_max_cube - root_min_cube) / 2.0 + (root_min_cube)
+        output = np.power(cube,root)
+        
+    return output 
+
+def root_transform_01(cube, raw_cube_min, raw_cube_max, inverse,root):
+    
+    root_min_cube = np.power(raw_cube_min, 1.0 / root)
+    root_max_cube = np.power(raw_cube_max, 1.0 / root)
+    
+    if inverse == False:
+        cube = (np.power(cube , 1.0/root) - root_min_cube) / (root_max_cube - root_min_cube)
+    else:
+        cube = (cube * (root_max_cube - root_min_cube)) + root_min_cube
+        cube = np.power(cube , root)
+
+    return output 
+
+def transform_func(cube,inverse_type,self):
+    """
+    Transform the Input Cube
+    # scale_01 / scale_neg11 / root / root_scale_01 / root_scale_neg11
+    """
+    if inverse_type == "scale_01":
+        cube = scale_01(cube = cube, 
+                        raw_cube_min = self.min_raw_val, 
+                        raw_cube_max = self.max_raw_val, 
+                        inverse = False)
+    
+    elif inverse_type == "scale_neg11":
+        cube = scale_neg11(cube = cube, 
+                        raw_cube_min = self.min_raw_val, 
+                        raw_cube_max = self.max_raw_val, 
+                        inverse = False)
+        
+    elif inverse_type == "root":
+        cube = root_transform(cube = cube, 
+                       raw_cube_min = self.min_raw_val, 
+                       raw_cube_max = self.max_raw_val, 
+                       inverse = False, 
+                       root = sampled_dataset.root)
+                
+    elif inverse_type == "root_scale_01":
+        cube = root_transform_01(cube = cube, 
+                                    raw_cube_min = self.min_raw_val, 
+                                    raw_cube_max = self.max_raw_val, 
+                                    inverse = False, 
+                                    root = sampled_dataset.root)
+                         
+    elif inverse_type == "root_scale_neg11":
+        cube = root_transform_neg11(cube = cube, 
+                                    raw_cube_min = self.min_raw_val, 
+                                    raw_cube_max = self.max_raw_val, 
+                                    inverse = False, 
+                                    root = sampled_dataset.root)
+        
+    else:
+        print("not implemented yet!")   
+    
+    return cube
+    
 
     
     
-def inverse_transform_func(cube, inverse_type, sampled_dataset, root):  
+def inverse_transform_func(cube, inverse_type, sampled_dataset):  
     """
     Inverse Transform the Input Cube
-    # minmax01 / minmaxneg11 / std_noshift / std / 
-    4_root / 6_root / 8_root / 16_root
+    # scale_01 / scale_neg11 / root / root_scale_01 / root_scale_neg11
     """
-    if inverse_type == "minmax01":
-        cube = minmax_scale(cube_tensor = cube, 
-                 inverse = True,
-                 min_cube = sampled_dataset.min_raw_val, 
-                 max_cube = sampled_dataset.max_raw_val, 
-                 redshift = False, 
-                 save_or_return = False)
-    elif inverse_type == "minmaxneg11":
-        cube = minmax_scale_neg11(cube_tensor = cube, 
-                 inverse = True,
-                 min_cube = sampled_dataset.min_raw_val, 
-                 max_cube = sampled_dataset.max_raw_val, 
-                 redshift = False, 
-                 save_or_return = False)
-    elif inverse_type == "std_noshift":
-        cube = standardize(cube_tensor = cube, 
-                 inverse = True,
-                 mean_cube = sampled_dataset.mean_raw_val, 
-                 stddev_cube = sampled_dataset.stddev_raw_val, 
-                 shift = False,
-                 redshift = False, 
-                 save_or_return = False)
-    elif inverse_type == "std":
-        cube = standardize(cube_tensor = cube, 
-                 inverse = True,
-                 mean_cube = sampled_dataset.mean_raw_val, 
-                 stddev_cube = sampled_dataset.stddev_raw_val, 
-                shift = True,
-                 redshift = False, 
-                 save_or_return = False)
-    elif inverse_type == "4_root":
-        cube = root_transform(cube_tensor = cube, 
-                 inverse = True,
-                 root = 4,
-                 redshift = False, 
-                 save_or_return = False) 
-    elif inverse_type == "6_root":
-        cube = root_transform(cube_tensor = cube, 
-                 inverse = True,
-                 root = 6,
-                 redshift = False, 
-                 save_or_return = False) 
-    elif inverse_type == "8_root":
-        cube = root_transform(cube_tensor = cube, 
-                 inverse = True,
-                 root = 8,
-                 redshift = False, 
-                 save_or_return = False)      
-    elif inverse_type == "16_root":
-        cube = root_transform(cube_tensor = cube, 
-                 inverse = True,
-                 root = 16,
-                 redshift = False, 
-                 save_or_return = False)
-    #new ones, SB
-    elif inverse_type == "scale_01":
-        cube = scale_01(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+    if inverse_type == "scale_01":
+        cube = scale_01(cube = cube, 
+                        raw_cube_min = sampled_dataset.min_raw_val, 
+                        raw_cube_max = sampled_dataset.max_raw_val, 
+                        inverse = True)
     
     elif inverse_type == "scale_neg11":
-        cube = scale_neg11(cube, sampled_dataset.min_raw_val, sampled_dataset.max_raw_val, TRUE)
+        cube = scale_neg11(cube = cube, 
+                        raw_cube_min = sampled_dataset.min_raw_val, 
+                        raw_cube_max = sampled_dataset.max_raw_val, 
+                        inverse = True)
         
-    elif inverse_type == "root_transform_01":
-        cube = root_transform_01(cube_tensor, 
-                         TRUE,
-                         root,  
-                         sampled_dataset.min_raw_val,
-                         sampled_dataset.max_raw_val,
-                         redshift= False, 
-                         save_or_return = False):
+    elif inverse_type == "root":
+        cube = root_transform(cube = cube, 
+                       raw_cube_min = sampled_dataset.min_raw_val, 
+                       raw_cube_max = sampled_dataset.max_raw_val, 
+                       inverse = True, 
+                       root = sampled_dataset.root)
                 
-    elif inverse_type == "root_transform_neg11":
-        cube = root_transform_01(cube_tensor, 
-                         TRUE,
-                         root,  
-                         sampled_dataset.min_raw_val,
-                         sampled_dataset.max_raw_val,
-                         redshift = False, 
-                         save_or_return = False):
+    elif inverse_type == "root_scale_01":
+        cube = root_transform_01(cube = cube, 
+                                    raw_cube_min = sampled_dataset.min_raw_val, 
+                                    raw_cube_max = sampled_dataset.max_raw_val, 
+                                    inverse = True, 
+                                    root = sampled_dataset.root)
+                         
+    elif inverse_type == "root_scale_neg11":
+        cube = root_transform_neg11(cube = cube, 
+                                    raw_cube_min = sampled_dataset.min_raw_val, 
+                                    raw_cube_max = sampled_dataset.max_raw_val, 
+                                    inverse = True, 
+                                    root = sampled_dataset.root)
         
     else:
         print("not implemented yet!")
@@ -517,5 +550,4 @@ def inverse_transform_func(cube, inverse_type, sampled_dataset, root):
 #     print("New max = " + str(np.amax(cube)))
     
     return cube
-
 

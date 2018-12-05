@@ -335,12 +335,16 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
 #     print("plot_max = " + str(plot_max))
     plt.xlim(plot_min,plot_max)
     
+#     if not log_plot:
     bins = np.linspace(plot_min,plot_max,300)
+#     if log_plot:
+#         bins = np.logspace(np.log10(plot_min),np.log10(plot_min), 300)
     
     real_label = "Real Subcube - Only Nonzero"
     noise_label = "Noise Subcube - Only Nonzero"
     recon_noise_label = "Reconstructed Noise Subcube - Only Nonzero"
     recon_real_label = "Reconstructed Real Subcube - Only Nonzero"
+
     if log_plot:
         real_label = real_label + "  (Log10)"
         noise_label = noise_label + "  (Log10)"
@@ -351,28 +355,28 @@ def mmd_hist_plot(noise, real, recon_noise, recon_real,
              bins = bins, 
              color = "blue" ,
              log = log_plot,
-             alpha = 0.8, 
+             alpha = 0.5, 
              label = real_label,
              density = plot_pdf)
     plt.hist(recon_real, 
              bins = bins, 
          color = "lightblue" ,
              log = log_plot,
-         alpha= 0.4, 
+         alpha= 0.2, 
          label = recon_real_label,
             density = plot_pdf)
     plt.hist(noise, 
              bins = bins, 
          color = "red" ,
              log = log_plot,
-         alpha= 0.8, 
+         alpha= 0.5, 
          label = noise_label,
             density = plot_pdf)
     plt.hist(recon_noise, 
              bins = bins, 
          color = "orange" ,
              log = log_plot,
-         alpha= 0.4, 
+         alpha= 0.2, 
          label = recon_noise_label,
             density = plot_pdf)
 
@@ -485,12 +489,15 @@ def visualize2d(real, fake, raw_cube_mean, t,
     """
     real = 5d tensor
     fake = 5d tensor
+    
+    np.nonzero is not used when taking the log -> changes shape of input
+    eps = 1e-36 is added to plot
     """
     
 #     max_ = raw_cube_mean
     max_ = 5
 #     print("max_ = "  +str(max_))
-    cols = real.shape[0]//2
+    cols = real.shape[0] // (2*4)
     rows = 2
     
     fig, axes = plt.subplots(nrows=2, ncols=cols, figsize=(16,4))
@@ -507,13 +514,17 @@ def visualize2d(real, fake, raw_cube_mean, t,
         if m < cols:
 #             print("fake max = "  +str(np.max(fake[m][0])))
 #             print("fake min = "  +str(np.min(fake[m][0])))
-            im = ax.imshow(np.log(fake[m][0].mean(axis=1)), aspect='equal', 
+            plot_cube = fake[m][0].mean(axis=1)
+            plot_cube = plot_cube + 1e-30
+            im = ax.imshow(np.log(plot_cube), aspect='equal', 
                        interpolation=None, vmin=0, vmax=max_)
         
         else:
 #             print("real max = "  +str(np.max(real[m][0])))
 #             print("real min = "  +str(np.min(real[m][0])))
-            im = ax.imshow(np.log(real[m][0].mean(axis=1)), aspect='equal', 
+            plot_cube = real[m][0].mean(axis=1)
+            plot_cube = plot_cube + 1e-30
+            im = ax.imshow(np.log(plot_cube), aspect='equal', 
                        interpolation=None, vmin=0, vmax=max_)
         m += 1
         ax.set_xticks([])

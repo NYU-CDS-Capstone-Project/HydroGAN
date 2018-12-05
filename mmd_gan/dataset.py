@@ -2,6 +2,7 @@ from torch.utils.data import Dataset, DataLoader
 import os
 import random
 import numpy as np
+from utils.data_utils import *
 
 def define_test(s_test, s_train):
     """
@@ -103,7 +104,7 @@ class HydrogenDataset(Dataset):
 
     def __init__(self, h5_file, f, root_dir, s_test, s_train,
                  s_sample, nsamples, min_cube, max_cube, mean_cube, stddev_cube,
-                min_raw_cube,max_raw_cube,mean_raw_cube,stddev_raw_cube, rotate_cubes):
+                min_raw_cube,max_raw_cube,mean_raw_cube,stddev_raw_cube, rotate_cubes, transform, root):
         """
         Args:
             h5_file (string): name of the h5 file with 32 sampled cubes.
@@ -147,6 +148,11 @@ class HydrogenDataset(Dataset):
         
         # Whether to rotate the sampled subcubes
         self.rotate_cubes = rotate_cubes
+        
+        # transform
+        self.transform = transform
+        self.root = root
+        
 
     def __len__(self):
         # Function called when len(self) is executed
@@ -181,24 +187,11 @@ class HydrogenDataset(Dataset):
                 t = random.randint(1,4)
                 sample = np.rot90(sample, t)
 
-
         #transforms happens here
-        if self.transform=='scale_01':
-            #[0-1] scaling
-            sample =  scale_01(sample, self.min_raw_val, self.max_raw_val, False):  
-    
-        if self.transform=='scale_neg11':
-            #s[-1,1] scaling
-            sample = scale_neg11(sample, self.min_raw_val, self.max_raw_val, False): 
-
-        if self.transform=='transform_root_scale_01':
-            #transform and [0-1] scaling
-            sample =  transform_root_scale_01(sample, self.min_raw_val, self.max_raw_val, False):  
-    
-        if self.transform=='transform_root_scale_neg11':
-            #transform and [-1,1] scaling
-            sample = transform_root_scale_neg11(sample, self.min_raw_val, self.max_raw_val, False): 
-
+        # scale_01 / scale_neg11 / root / root_scale_01 / root_scale_neg11
+        sample = transform_func(cube = sample,
+                                inverse_type = self.transform,
+                                self = self)
 
         sample = np.array(sample).reshape((1,self.s_sample,self.s_sample,self.s_sample))
 
