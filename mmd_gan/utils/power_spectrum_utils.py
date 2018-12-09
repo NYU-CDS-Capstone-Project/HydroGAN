@@ -85,7 +85,8 @@ def moving_average(data_set, periods=3):
 # def power_spectrum_np(cube, mean_raw_cube, SubBoxSize):
 def power_spectrum_np(cube, mean_raw_cube):
 
-    SubBoxSize = 128
+#    SubBoxSize = 128
+    SubBoxSize = 75.0/2048.0*64
     
     nc = cube.shape[2] # define how many cells your box has
     delta = cube/mean_raw_cube - 1.0
