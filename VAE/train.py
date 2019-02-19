@@ -1,243 +1,134 @@
-def ELBO(recon_x, x, mu, logvar):
-    """
-    Computes ELBO =  Log Likelihood - KL Divergence 
-    
-    We want to maximize ELBO, so ELBO function returns 
-    -1*ELBO, to pass it to the optimizer more conveniently. 
-    
-    """
-    
-    # LOG LIKELIHOOD (-CROSS ENTROPY), THE FIRST TERM OF ELBO
-    
-    print("--------------------------------------")
-    print("Calculating Loss...")
-    print("recon_x shape = " + str(recon_x.shape))
-    
-    BCE = F.binary_cross_entropy(recon_x, 
-                                 x.view(-1, 1, 128, 128, 128), 
-                                 reduction='sum')
-    print("BCE Loss = " + str(BCE))
-    
-    LogLikelihood = (-1)*BCE
+def train_plot_hist(epoch):
 
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    print ("KLD =" +str(KLD))
-    ELBO = (LogLikelihood - KLD)/float(batch_size)
-    print ("ELBO = "+str(ELBO))
-    
-    return (-1)*ELBO
-
-decoder_sum_lists = {}
-
-for out_plot in ["first_decode_out_sum", "conv_1_out_sum", "relu_1_out_sum", "max_unpool_1_out_sum",
-            "conv_2_out_sum", "relu_2_out_sum", "max_unpool_2_out_sum", "conv_3_out_sum", \
-            "relu_3_out_sum"]:
-
-    decoder_sum_lists[out_plot] = []
-
-def train(epoch):
     model.train()
     train_loss = 0
-#     for batch_idx, (data, _) in enumerate(train_loader):
+
+    plt.figure(figsize=(20,10))
+
+    
     for batch_idx, data in enumerate(train_loader):
-#         print(batch_idx)
-#         print(data)
-        
-        #print("Batch size = " + str(data.shape))
         
         data = data.to(device)
-        print("Data transfer to device completed.")
         
         optimizer.zero_grad()
         
         recon_batch, first_decode_out_sum, conv_1_out_sum, relu_1_out_sum, max_unpool_1_out_sum,\
                     conv_2_out_sum, relu_2_out_sum, max_unpool_2_out_sum, conv_3_out_sum, \
-                    relu_3_out_sum , mu, logvar = model(data)
+                    relu_3_out_sum , mu, logvar = model(data,mode="training")
             
-        # Plotting Input Cube
-        print("data shape = " + str(data.view(-1,128,128,128).shape))
-        print("data shape = " + str(data[0].cpu().view(128,128,128).numpy().shape))
-        
-#         if epoch % (epochs / 20) == 0 and batch_idx == 1:
-            
-            ## plot first_decoder out
-
-
-        if epoch > 1 and epoch % (epochs / 50) == 0 and batch_idx == 0:
-            print ("Plotting the first decoder output sum")
-#         print ("first decoder out sum = "+str(first_decode_out_sum))
-            plt.figure(figsize=(20,10))
-            plt.plot(first_decode_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="b")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("First Decoder Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot first convolution out
-            print ("Plotting the first convolution output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(conv_1_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="r")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("First Convolution Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot first relu out
-            print ("Plotting the first relu output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(relu_1_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="m")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("First ReLU Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot first max unpool out
-            print ("Plotting the first max unpool output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(max_unpool_1_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="darkorange")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("First Max Unpool Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot second convolution out
-            print ("Plotting the second convolution output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(conv_2_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="r")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("Second Convolution Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot second relu out
-            print ("Plotting the second relu output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(relu_2_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="m")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("Second ReLU Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot second max unpool out
-            print ("Plotting the second max unpool output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(max_unpool_2_out_sum, linewidth=3.5,
-                     alpha=0.6, 
-                     color="darkorange")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("Second Max Unpool Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot third convolution out
-            print ("Plotting the third convolution output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(conv_3_out_sum, linewidth=3.5, alpha=0.6,
-                     color="r")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("Third Convolution Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-
-            ## plot third relu out
-            print ("Plotting the third relu output sum")
-            plt.figure(figsize=(20,10))
-            plt.plot(relu_3_out_sum, linewidth=3.5, alpha=0.6, 
-                     color="m")
-            plt.rcParams["font.size"] = 16
-            plt.xlabel("Batch Iterations")
-            plt.title("Third ReLU Output Sum")
-    #             plt.xticks = range(epochs)
-    #             plt.grid()
-            plt.show()
-            print ("Visualizing original cube")
-            visualize_cube(cube=data[0].cpu().view(128,128,128).detach().numpy(),
-                           edge_dim = 128,
-                           start_cube_index_x = 0,
-                          start_cube_index_y = 0,
-                          start_cube_index_z = 0,
-                          fig_size = (20,20),
-                          norm_multiply = 1000,
-                          color_map = "Blues",
-                          lognormal = False)
-            
-            print ("Visualizing reconstructed cube")
-            visualize_cube(cube=recon_batch[0].cpu().view(128,128,128).detach().numpy(),
-                           edge_dim = 128,
-                           start_cube_index_x = 0,
-                          start_cube_index_y = 0,
-                          start_cube_index_z = 0,
-                          fig_size = (20,20),
-                          norm_multiply = 1000,
-                          color_map = "Blues",
-                          lognormal = False)
-            
-            print ("Output mass sum (reconstructed batch): "\
-                   + str(np.sum(recon_batch[0].cpu().view(128,128,128).detach().numpy())))
-        
-        # ACTUALLY MINUS ELBO SO THAT OPTIMIZER CAN MINIMIZE IT
-        loss = ELBO(recon_batch, data, mu, logvar)
-        
+        loss = Beta_SSE_KLD(recon_batch, data, mu, logvar, beta=64, epsilon=1e-8)
+        print ("Loss = "+str(loss))
         loss.backward()
+        optimizer.step()
+        
         train_loss += loss.item()
         
         loss_history.append(loss.item())
-        
-        optimizer.step()
-        # if batch_idx % args.log_interval == 0:
-        if batch_idx % log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.12f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
-                loss.item() / len(data)))
 
+        if batch_idx in [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30]:
+            
+            ## REAL DATA            
+            real_data = (data[0].cpu().view(128,128,128).detach().numpy())
+            real_cube_tr = real_data[np.nonzero(np.nan_to_num(real_data))]
+            real_cube_tr = np.log10(real_cube_tr).flatten()
+            
+            ## RECON DATA        
+            recon_data = recon_batch[0].cpu().view(128,128,128).detach().numpy()
+            recon_cube_tr = recon_data[np.nonzero(np.nan_to_num(recon_data))]
+            recon_cube_tr = np.log10(recon_cube_tr).flatten()
+
+            noise_batch, first_decode_out_sum, conv_1_out_sum, relu_1_out_sum, max_unpool_1_out_sum,\
+                     conv_2_out_sum, relu_2_out_sum, max_unpool_2_out_sum, conv_3_out_sum, \
+                     relu_3_out_sum , mu, logvar = model(data,mode="inference")
+            
+            ## NOISE INPUT            
+            noise_out_data = noise_batch[0].cpu().view(128,128,128).detach().numpy()
+            noise_out_cube_tr = noise_out_data[np.nonzero(noise_out_data)]
+            noise_out_cube_tr = np.log10(noise_out_cube_tr).flatten()
+
+            ## HISTOGRAMS
+            plt.hist(real_cube_tr, label="real cube", color="g", alpha=0.3, bins=100,
+                    density=True)
+            plt.hist(recon_cube_tr, label ="reconstructed cube", color="b", alpha=0.3, bins=100,
+                    density=True)
+            plt.hist(noise_out_cube_tr, label ="noise input cube", color="r", alpha=0.3, bins=100,
+                     density=True)
+        
+    plt.legend()
     print('====> Epoch: {} Average loss: {:.12f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
     
+def train_plot_power_spec(epoch):
 
-if __name__ == "__main__":
-    
-    loss_history = []
-    
-    decoder_sum_lists = {}
+    model.train()
+    train_loss = 0
+
+    plt.figure(figsize=(20,10))
+
+    for batch_idx, data in enumerate(train_loader):
         
-    for out_plot in ["first_decode_out_sum", "conv_1_out_sum", "relu_1_out_sum", "max_unpool_1_out_sum",
-                    "conv_2_out_sum", "relu_2_out_sum", "max_unpool_2_out_sum", "conv_3_out_sum", \
-                    "relu_3_out_sum"]:
+        data = data.to(device)
+        optimizer.zero_grad()
+        
+        recon_batch, first_decode_out_sum, conv_1_out_sum, relu_1_out_sum, max_unpool_1_out_sum,\
+                    conv_2_out_sum, relu_2_out_sum, max_unpool_2_out_sum, conv_3_out_sum, \
+                    relu_3_out_sum , mu, logvar = model(data,mode="training")
             
-        decoder_sum_lists[out_plot] = []
+        loss = Beta_SSE_KLD(recon_batch, data, mu, logvar, beta=64, epsilon=1e-8)
+        print ("Loss = "+str(loss))
+        loss.backward()
+        optimizer.step()
+        
+        train_loss += loss.item()
+        
+        loss_history.append(loss.item())
+
+        print("data shape = " + str(data.view(-1,128,128,128).shape))
+        print("data shape = " + str(data[0].cpu().view(128,128,128).numpy().shape))
+        
+        
+
+        if batch_idx in [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30]:
             
-    for epoch in range(1, epochs + 1):
-        print("Epoch = " + str(epoch) + " / " + str(epochs))
+            real_power_spec = (data[0].cpu().view(128,128,128).detach().numpy() - 1)*max_original_cube
+            recon_power_spec = (recon_batch[0].cpu().view(128,128,128).detach().numpy()-1)*max_original_cube
+
+            noise_recon_batch, first_decode_out_sum, conv_1_out_sum, relu_1_out_sum, max_unpool_1_out_sum,\
+                     conv_2_out_sum, relu_2_out_sum, max_unpool_2_out_sum, conv_3_out_sum, \
+                     relu_3_out_sum , mu, logvar = model(data,mode="inference")
+    
+            noise_power_spec = (noise_recon_batch[0].cpu().view(128,128,128).detach().numpy()-1)*max_original_cube
         
-        train(epoch)
-        
-        # Plotting Training Losses
-        plt.figure(figsize=(20,10))
-        plt.plot(loss_history, linewidth=3.5, alpha=0.6,
-                color="crimson", marker="o")
-        plt.rcParams["font.size"] = 16
-        plt.title("Loss History (-1*ELBO)")
-        plt.show()
+            BoxSize=75.0/2048*128
+            threads, MAS, axis = 1, "CIC", 0
+            
+            ## assign real data and noise batch
+            delta_real_cube = real_power_spec
+            delta_gen_cube = noise_power_spec
+            
+            delta_real_cube /= np.mean(delta_real_cube,
+                              dtype=np.float64)
+            
+            delta_real_cube -= 1.0
+            delta_real_cube = delta_real_cube.astype(np.float32)
+
+            Pk_real_cube = PKL.Pk(delta_real_cube, BoxSize, axis, MAS, threads)
+
+            delta_gen_cube /= np.mean(delta_gen_cube,
+                                     dtype=np.float64)
+            delta_gen_cube -= 1.0
+            delta_gen_cube = delta_gen_cube.astype(np.float32)
+
+            Pk_gen_cube = PKL.Pk(delta_gen_cube, BoxSize, axis, MAS, threads)
+
+            plt.plot(np.log(Pk_real_cube.k3D), np.log(Pk_real_cube.Pk[:,0]), color="b", label="original cube")
+            plt.plot(np.log(Pk_gen_cube.k3D), np.log(Pk_gen_cube.Pk[:,0]), color="r", label="jaas")
+            plt.rcParams["font.size"] = 12
+            plt.title("Power Spectrum Comparison")
+            plt.xlabel('log(Pk.k3D)')
+            plt.ylabel('log(Pk.k3D)')
+
+    plt.legend()
+    print('====> Epoch: {} Average loss: {:.12f}'.format(
+          epoch, train_loss / len(train_loader.dataset)))
+
