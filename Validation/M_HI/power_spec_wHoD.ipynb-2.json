@@ -1,0 +1,637 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/share/apps/python3/3.6.3/intel/lib/python3.6/site-packages/h5py-2.7.1-py3.6-linux-x86_64.egg/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.\n",
+      "  from ._conv import register_converters as _register_converters\n"
+     ]
+    }
+   ],
+   "source": [
+    "from __future__ import print_function\n",
+    "import numpy as np\n",
+    "import h5py\n",
+    "import pickle as pkl\n",
+    "import random\n",
+    "import torch\n",
+    "import torch.utils.data\n",
+    "from torch import nn, optim\n",
+    "from torch.nn import functional as F\n",
+    "from torch.utils.data import Dataset, DataLoader\n",
+    "import matplotlib.pyplot as plt\n",
+    "%matplotlib inline\n",
+    "from torch.utils.data import Dataset, DataLoader\n",
+    "from torch.distributions import normal\n",
+    "import itertools\n",
+    "from matplotlib.ticker import MultipleLocator\n",
+    "from mpl_toolkits.mplot3d.art3d import Poly3DCollection\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "from mpl_toolkits.mplot3d import Axes3D\n",
+    "from matplotlib import colors\n",
+    "import h5py\n",
+    "import matplotlib as mpl\n",
+    "import pyfftw\n",
+    "import Pk_library as PKL"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 96,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def read_halo_file(catalogue_path = \"halo_catalogues/\",\n",
+    "                   redshift = 0,\n",
+    "                  ):\n",
+    "    path = \"{}Halo_catalogue_z={}.hdf5\".format(catalogue_path, \n",
+    "                                                redshift)\n",
+    "    \n",
+    "    f = h5py.File(path)\n",
+    "    \n",
+    "    mass = f[\"mass\"]\n",
+    "    position_x = np.array(f[\"pos\"])[:,0]\n",
+    "    position_y = np.array(f[\"pos\"])[:,1]\n",
+    "    position_z = np.array(f[\"pos\"])[:,2]\n",
+    "    radius = f[\"radius\"]\n",
+    "    \n",
+    "    return np.array(mass), position_x, position_y, position_z, np.array(radius)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "datapath=\"\"\n",
+    "f = h5py.File(\"fields_z=0.0.hdf5\", 'r')\n",
+    "f=f['delta_HI']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 164,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "NUM_REDSHIFTS = 5\n",
+    "from collections import defaultdict\n",
+    "\n",
+    "def build_redshift_data(halo_catalogue_path):\n",
+    "    \n",
+    "    redshift_dict = defaultdict(dict)\n",
+    "    \n",
+    "    for i in range(NUM_REDSHIFTS + 1):\n",
+    "        redshift_dict[i][\"total_mass\"], redshift_dict[i][\"position_x\"], redshift_dict[i][\"position_y\"], \\\n",
+    "        redshift_dict[i][\"position_z\"], redshift_dict[i][\"radius\"] = \\\n",
+    "            [*read_halo_file(halo_catalogue_path, i)] \n",
+    "        \n",
+    "        redshift_dict[i][\"HI_mass\"] = np.array(pd.DataFrame(pd.read_csv(\"MHI_z={}.csv\".format(i)))[\"0\"])\n",
+    "        \n",
+    "    [df_0, df_1, df_2, df_3, df_4, df_5] = [pd.DataFrame({\"total_mass\":redshift_dict[i][\"total_mass\"],\n",
+    "                                                         \"position_x\":redshift_dict[i][\"position_x\"],\n",
+    "                                                         \"position_y\":redshift_dict[i][\"position_y\"],\n",
+    "                                                         \"position_z\":redshift_dict[i][\"position_z\"],\n",
+    "                                                         \"radius\":redshift_dict[i][\"radius\"],\n",
+    "                                                         \"HI_mass\":redshift_dict[i][\"HI_mass\"]}) \\\n",
+    "                                           for i in range(NUM_REDSHIFTS+1)]\n",
+    "        \n",
+    "    return df_0, df_1, df_2, df_3, df_4, df_5"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 128,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>HI_mass</th>\n",
+       "      <th>position_x</th>\n",
+       "      <th>position_y</th>\n",
+       "      <th>position_z</th>\n",
+       "      <th>radius</th>\n",
+       "      <th>total_mass</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>1.321760e+11</td>\n",
+       "      <td>0.856017</td>\n",
+       "      <td>26.345181</td>\n",
+       "      <td>18.318504</td>\n",
+       "      <td>1.373196</td>\n",
+       "      <td>4.108502e+14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>1.256623e+11</td>\n",
+       "      <td>19.696722</td>\n",
+       "      <td>47.432613</td>\n",
+       "      <td>48.919952</td>\n",
+       "      <td>1.398435</td>\n",
+       "      <td>3.463541e+14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>1.204984e+11</td>\n",
+       "      <td>23.862780</td>\n",
+       "      <td>33.081966</td>\n",
+       "      <td>41.393356</td>\n",
+       "      <td>1.150424</td>\n",
+       "      <td>3.010118e+14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1.176074e+11</td>\n",
+       "      <td>10.904087</td>\n",
+       "      <td>50.859200</td>\n",
+       "      <td>47.598503</td>\n",
+       "      <td>1.314615</td>\n",
+       "      <td>2.777093e+14</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>1.166619e+11</td>\n",
+       "      <td>68.559006</td>\n",
+       "      <td>59.030533</td>\n",
+       "      <td>53.987701</td>\n",
+       "      <td>1.055330</td>\n",
+       "      <td>2.703974e+14</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "        HI_mass  position_x  position_y  position_z    radius    total_mass\n",
+       "0  1.321760e+11    0.856017   26.345181   18.318504  1.373196  4.108502e+14\n",
+       "1  1.256623e+11   19.696722   47.432613   48.919952  1.398435  3.463541e+14\n",
+       "2  1.204984e+11   23.862780   33.081966   41.393356  1.150424  3.010118e+14\n",
+       "3  1.176074e+11   10.904087   50.859200   47.598503  1.314615  2.777093e+14\n",
+       "4  1.166619e+11   68.559006   59.030533   53.987701  1.055330  2.703974e+14"
+      ]
+     },
+     "execution_count": 128,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# df_0.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 165,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0/5\n",
+      "1/5\n",
+      "2/5\n",
+      "3/5\n",
+      "4/5\n",
+      "5/5\n"
+     ]
+    }
+   ],
+   "source": [
+    "redshift_dfs = build_redshift_data(\"halo_catalogues/\")\n",
+    "\n",
+    "for i in range(NUM_REDSHIFTS+1):\n",
+    "    print (\"{}/{}\".format(i, NUM_REDSHIFTS))\n",
+    "    redshift_dfs[i].to_csv(\"redshift_df_{}.csv\".format(i), header=True, index=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 131,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "2.34375"
+      ]
+     },
+     "execution_count": 131,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "(64/2048)*75 # mpc/h"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 132,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1984"
+      ]
+     },
+     "execution_count": 132,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "2048-64"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 271,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_halo_tensor(pos_x, pos_y, pos_z, redshift, sample_edge):\n",
+    "    \n",
+    "    \"\"\"Args:\n",
+    "    - pos_x: left corner x coordinate in simulation, (int in (0, 2048-sample_edge))\n",
+    "    - pos_y: left corner y coordinate in simulation, (int in (0, 2048-sample_edge))\n",
+    "    - pos_z: left corner z coordinate in simulation, (int in (0, 2048-sample_edge))\n",
+    "    \n",
+    "    - redshift: redshift, (int in range(NUM_REDSHIFTS+1))\n",
+    "    - sample_edge: size of one edge of each sample (int: sample.size[0])\"\"\"\n",
+    "    \n",
+    "    new_halo_tensor = np.zeros((sample_edge,)*3)\n",
+    "    redshift_df = pd.DataFrame(pd.read_csv(\"redshift_df_{}.csv\".format(redshift)))\n",
+    "    halo_mpc_edge = (sample_edge/2048)*75\n",
+    "    halo_mpc_voxel_edge = (1/2048)*75\n",
+    "    halo_pos_x, halo_pos_y, halo_pos_z = [(x/2048)*75 for x in [pos_x, pos_y, pos_z]]\n",
+    "    upper_x, upper_y, upper_z = [pos + halo_mpc_edge for pos in [halo_pos_x, halo_pos_y, halo_pos_z]]\n",
+    "    \n",
+    "    cube_in_position = redshift_df[(redshift_df[\"position_x\"] >= halo_pos_x)&\\\n",
+    "                                   (redshift_df[\"position_x\"] < upper_x)&\\\n",
+    "                                   (redshift_df[\"position_y\"] >= halo_pos_y)&\\\n",
+    "                                   (redshift_df[\"position_y\"] < upper_y)&\\\n",
+    "                                   (redshift_df[\"position_z\"] >= halo_pos_z)&\\\n",
+    "                                   (redshift_df[\"position_z\"] < upper_z)]\n",
+    "    \n",
+    "    edge_r = [*range(sample_edge)]\n",
+    "    voxels = [*itertools.product(edge_r, edge_r, edge_r)]\n",
+    "    \n",
+    "    for voxel in voxels:\n",
+    "        x, y, z = voxel[0], voxel[1], voxel[2]\n",
+    "        new_halo_tensor[x, y, z] = np.sum(cube_in_position[(cube_in_position[\"position_x\"]>=halo_mpc_voxel_edge*x)&\\\n",
+    "                                                                   (cube_in_position[\"position_x\"]<halo_mpc_voxel_edge*x + halo_mpc_voxel_edge)&\\\n",
+    "                                                                   (cube_in_position[\"position_y\"]>=halo_mpc_voxel_edge*y)&\\\n",
+    "                                                                   (cube_in_position[\"position_y\"]<halo_mpc_voxel_edge*y + halo_mpc_voxel_edge)&\\\n",
+    "                                                                   (cube_in_position[\"position_z\"]>=halo_mpc_voxel_edge*z)&\\\n",
+    "                                                                   (cube_in_position[\"position_z\"]<halo_mpc_voxel_edge*z + \\\n",
+    "                                                                    halo_mpc_voxel_edge)][\"HI_mass\"])\n",
+    "                \n",
+    "    path = \"large_halo_cubes/redshift_{}\".format(redshift)\n",
+    "    with open(\"{}/lower_corner_{}_{}_{}.pkl\".format(path, pos_x, pos_y, pos_z),\"wb\") as f:\n",
+    "        pkl.dump(new_halo_tensor, f)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 273,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "edge_r = [*np.arange(0, 2048, 64)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 276,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "lower_corners = [*itertools.product(edge_r, edge_r, edge_r)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 277,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "split = int(len(lower_corners)/4)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 278,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "8192"
+      ]
+     },
+     "execution_count": 278,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "split"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "corner: (0, 0, 0), 0/32768\n"
+     ]
+    }
+   ],
+   "source": [
+    "# redshift_0\n",
+    "for corner in lower_corners[:split]:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 0, 64)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# redshift_1\n",
+    "for corner in lower_corners:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 1, 64)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# redshift_2\n",
+    "for corner in lower_corners:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 2, 64)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# redshift_3\n",
+    "for corner in lower_corners:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 3, 64)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# redshift_4\n",
+    "for corner in lower_corners:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 4, 64)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# redshift_5\n",
+    "for corner in lower_corners:\n",
+    "    print (\"corner: {}, {}/{}\".format(corner, lower_corners.index(corner), len(lower_corners)))\n",
+    "    get_halo_tensor(corner[0], corner[1], corner[2], 5, 64)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Power Spectrum Plots"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "def power_spectrum_hod(simulation_batch, generated_batch, halo_batch,\n",
+    "                       threads=1, MAS=\"CIC\", axis=0, BoxSize=75.0/2048*64):\n",
+    "    \n",
+    "    \"\"\"Args:\n",
+    "    - simulation_batch: (tensor) \"real\" sample batch taken from the data\n",
+    "    - halo_batch: (tensor) samples taken from the same locations of the halo catalogue of the\n",
+    "                  corresponding redshift\n",
+    "    - generated_batch: model output batch that corresponds to the simulation batch\n",
+    "    \n",
+    "       Returns:\n",
+    "    - power spectrum plot of simulation_batch, generated_batch, and halo batch\n",
+    "            mean +- 1 standard deviation for each \n",
+    "       \n",
+    "       \"\"\"\n",
+    "    \n",
+    "    # initialize batch lists\n",
+    "    k3d_real, k3d_gen, k3d_halo = [], [], []\n",
+    "    Pk_real, Pk_gen, Pk_halo = [], [], []\n",
+    "    BoxSize, axis, MAS, threads = BoxSize, axis, MAS, threads\n",
+    "    batch_size = simulation_batch.shape[0]\n",
+    "\n",
+    "    for i in range(batch_size):\n",
+    "\n",
+    "        simulation_sample, generated_sample, halo_sample = simulation_batch[i], generated_batch[i], halo_batch[i]\n",
+    "        delta_real_cube, delta_gen_cube, delta_halo = simulation_sample, generated_sample, halo_sample\n",
+    "\n",
+    "        delta_real_cube /= np.mean(delta_real_cube, dtype=np.float64)\n",
+    "        delta_real_cube -= 1.0\n",
+    "        delta_real_cube = delta_real_cube.astype(np.float32)\n",
+    "        Pk_real_cube = PKL.Pk(delta_real_cube, BoxSize, axis, MAS, threads)\n",
+    "\n",
+    "        delta_gen_cube /= np.mean(delta_gen_cube, dtype=np.float64)\n",
+    "        delta_gen_cube -= 1.0\n",
+    "        delta_gen_cube = delta_gen_cube.astype(np.float32)\n",
+    "        Pk_gen_cube = PKL.Pk(delta_gen_cube, BoxSize, axis, MAS, threads)\n",
+    "\n",
+    "        delta_halo /= np.mean(delta_halo, dtype=np.float64)\n",
+    "        delta_halo -= 1.0\n",
+    "        delta_halo = delta_halo.astype(np.float32)\n",
+    "        Pk_halo = PKL.Pk(delta_halo, BoxSize, axis, MAS, threads)\n",
+    "\n",
+    "        k3d_real.append(np.log(Pk_real_cube.k3D))\n",
+    "        k3d_gen.append(np.log(Pk_gen_cube.k3D))\n",
+    "        k3d_halo.append(np.log(Pk_halo.k3D))\n",
+    "\n",
+    "        Pk_real.append(np.log(Pk_real_cube.Pk[:,0]))\n",
+    "        Pk_gen.append(np.log(Pk_gen_cube.Pk[:,0]))\n",
+    "        Pk_halo.append(np.log(Pk_halo.Pk[:,0]))\n",
+    "\n",
+    "    [k3d_real, k3d_gen, k3d_halo] = [np.array(x) for x in [k3d_real, k3d_gen, k3d_halo]]\n",
+    "    [Pk_real, Pk_gen, Pk_halo] = [np.array(x) for x in [Pk_real, Pk_gen, Pk_halo]] \n",
+    "\n",
+    "    mean_k3d_real, mean_k3d_gen, mean_k3d_halo = np.mean(k3d_real, 0), np.mean(k3d_gen, 0), np.mean(k3d_halo, 0)\n",
+    "    stdev_k3d_real, stdev_k3d_gen, stdev_k3d_halo = np.std(k3d_real, 0), np.std(k3d_gen, 0), np.std(k3d_halo, 0)\n",
+    "\n",
+    "    mean_Pk_real, mean_Pk_gen, mean_Pk_halo = np.mean(Pk_real, 0), np.mean(Pk_gen, 0), np.mean(Pk_halo, 0)\n",
+    "    stdev_Pk_real, stdev_Pk_gen, stdev_Pk_halo = np.std(Pk_real, 0), np.std(Pk_gen, 0), np.std(Pk_halo, 0)\n",
+    "\n",
+    "    # Plotting\n",
+    "    plt.figure(figsize=(10,5))\n",
+    "\n",
+    "    plt.rcParams[\"font.size\"] = 12\n",
+    "    # real\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real, color=\"b\", label=\"Original\", linewidth=3, alpha=0.7, marker=\"o\")\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real + stdev_Pk_real, color=\"b\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real - stdev_Pk_real, color=\"b\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "\n",
+    "    # generated\n",
+    "    plt.plot(mean_k3d_gen, mean_Pk_gen, color=\"r\", label=\"Generated\", linewidth=3, alpha=0.7, marker=\"o\")\n",
+    "    plt.plot(mean_k3d_gen, mean_Pk_gen + stdev_Pk_gen, color=\"r\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "    plt.plot(mean_k3d_gen, mean_Pk_gen - stdev_Pk_gen, color=\"r\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "\n",
+    "\n",
+    "\n",
+    "    # hod\n",
+    "    plt.plot(mean_k3d_halo, mean_Pk_halo, color=\"k\", label=\"HOD\", linewidth=3, alpha=0.7, marker=\"o\")\n",
+    "    plt.plot(mean_k3d_halo, mean_Pk_halo + stdev_Pk_halo, color=\"k\", linewidth=3.5, alpha=0.4)\n",
+    "    plt.plot(mean_k3d_halo, mean_Pk_halo - stdev_Pk_halo, color=\"k\", linewidth=3.5, alpha=0.4)\n",
+    "    \n",
+    "    plt.title(\"Power Spectrum Comparison\")\n",
+    "    plt.xlabel('log(Pk.k3D)')\n",
+    "    plt.ylabel('log(Pk)')\n",
+    "    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=3)\n",
+    "    \n",
+    "    plt.show()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 65,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def power_spectrum_simulation(simulation_batch, threads=1, MAS=\"CIC\", axis=0, BoxSize=75.0/2048*64):\n",
+    "    \n",
+    "    # initialize batch lists\n",
+    "    k3d_real, k3d_gen, k3d_halo = [], [], []\n",
+    "    Pk_real, Pk_gen, Pk_halo = [], [], []\n",
+    "    BoxSize, axis, MAS, threads = BoxSize, axis, MAS, threads\n",
+    "    batch_size = simulation_batch.shape[0]\n",
+    "\n",
+    "    for i in range(batch_size):\n",
+    "\n",
+    "        simulation_sample = np.array(simulation_batch[i])\n",
+    "        delta_real_cube = simulation_sample\n",
+    "\n",
+    "        delta_real_cube /= np.mean(delta_real_cube, dtype=np.float64)\n",
+    "        delta_real_cube -= 1.0\n",
+    "        delta_real_cube = delta_real_cube.astype(np.float32)\n",
+    "        Pk_real_cube = PKL.Pk(delta_real_cube, BoxSize, axis, MAS, threads)\n",
+    "        k3d_real.append(np.log(Pk_real_cube.k3D))\n",
+    "        Pk_real.append(np.log(Pk_real_cube.Pk[:,0]))\n",
+    "\n",
+    "    k3d_real, Pk_real = np.array(k3d_real), np.array(Pk_real)\n",
+    "\n",
+    "    mean_k3d_real, stdev_k3d_real = np.mean(k3d_real, 0), np.std(k3d_real, 0)\n",
+    "\n",
+    "    mean_Pk_real = np.mean(Pk_real, 0)\n",
+    "    stdev_Pk_real = np.std(Pk_real, 0)\n",
+    "    \n",
+    "    # Plotting\n",
+    "    plt.figure(figsize=(20,10))\n",
+    "    plt.rcParams[\"font.size\"] = 14\n",
+    "    # real\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real, color=\"b\", label=\"Original\", linewidth=3, alpha=0.7)\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real + stdev_Pk_real, color=\"b\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "    plt.plot(mean_k3d_real, mean_Pk_real - stdev_Pk_real, color=\"b\", linewidth=2.5, alpha=0.4, linestyle=\"--\")\n",
+    "    \n",
+    "    plt.title(\"Power Spectrum Comparison\")\n",
+    "    plt.xlabel('log(Pk.k3D)')\n",
+    "    plt.ylabel('log(Pk)')\n",
+    "    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.09), fancybox=True, shadow=True, ncol=3)\n",
+    "    \n",
+    "    plt.show()\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
